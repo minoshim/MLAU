@@ -1,0 +1,76 @@
+--- MLAU two-dimensional code (MPI version) ------
+ The package is assumed to be instailled at the home directory (~/MLAU).
+ If not, modify INCLUDE_PATH defined in Makefile.
+
+- Execute a simulation:
+  > cd KHI/
+  > make
+  > mpiexec -np 16 -genv OMP_NUM_THREADS 2 ./a.out
+  where,
+   "16" corresponds to the number of MPI processes, which should be equal to MNP defined in global.hpp,
+   "2" corresponds to the number of OpenMP threads.
+
+  Simulation data is stored in dat/.
+  Simulation parameters are defined in global.hpp
+
+- Select a numerical scheme by editting mhd_fd_ct_2d.c
+  Spatial order => ODR (1, 2, 3, or 4)
+  Temporal order => R_K (1, 2, or 3)
+  Flux function => func_flux (MLAU, HLLD, or ROE)
+
+- Simulation data is handled through IDL (Interactive Data Language), with scripts found in idl/.
+  IDL> .r rddt
+  % Compiled module: $MAIN$.
+  Set data directory: dat
+  % Compiled module: FILE_READS.
+  % $MAIN$: Independent varaibles are loaded.
+  % $MAIN$: To load MHD data, call READ_MHD.
+  IDL> .r read_mhd
+  % Compiled module: $MAIN$.
+  Set time step (0 - 50) : 30
+  Read MHD data at 30 step
+  % Compiled module: BINARY_READ.
+  IDL> help
+  ...
+  B2              FLOAT     = Array[64, 64]
+  BETA            FLOAT     =       100000.
+  BX              FLOAT     = Array[64, 64]
+  BX_CT           FLOAT     = Array[64, 64]
+  BY              FLOAT     = Array[64, 64]
+  BY_CT           FLOAT     = Array[64, 64]
+  BZ              FLOAT     = Array[64, 64]
+  DIR             STRING    = 'dat'
+  DT              FLOAT     =       3.23303
+  DX              FLOAT     =      0.312500
+  DY              FLOAT     =      0.312500
+  EN              FLOAT     = Array[64, 64]
+  FIL             STRING    = Array[16]
+  GAMMA           FLOAT     =       2.00000
+  LAMBDA          FLOAT     =       1.00000
+  MNP_X           LONG      =            4
+  MNP_Y           LONG      =            4
+  MX              FLOAT     = Array[64, 64]
+  MY              FLOAT     = Array[64, 64]
+  MZ              FLOAT     = Array[64, 64]
+  NT              LONG      =           51
+  NX              LONG      =           64
+  NY              LONG      =           64
+  PR              FLOAT     = Array[64, 64]
+  RO              FLOAT     = Array[64, 64]
+  SST             INT       =       30
+  T               FLOAT     = Array[51]
+  TE              FLOAT     = Array[64, 64]
+  UX              FLOAT     = Array[64, 64]
+  UY              FLOAT     = Array[64, 64]
+  UZ              FLOAT     = Array[64, 64]
+  X               FLOAT     = Array[64]
+  XOFF            INT       =        4
+  Y               FLOAT     = Array[64]
+  YOFF            INT       =        4
+  ...
+  
+-----------------------------------------------------
+Copyright 2020 Takashi Minoshima
+
+Contact at Takashi Minoshima <minoshim@jamstec.go.jp>
+-----------------------------------------------------
