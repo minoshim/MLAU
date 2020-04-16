@@ -4,6 +4,7 @@
 
 - Execute a simulation:
   > cd shock/
+  > mkdir dat/
   > make
   > ./a.out
   then simulation data is stored in dat/.

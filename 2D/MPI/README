@@ -4,6 +4,7 @@
 
 - Execute a simulation:
   > cd KHI/
+  > mkdir dat/
   > make
   > mpiexec -np 16 -genv OMP_NUM_THREADS 2 ./a.out
   where,

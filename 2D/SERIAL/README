@@ -4,6 +4,7 @@
 
 - Execute a simulation:
   > cd OTvortex/
+  > mkdir dat/
   > make
   > ./a.out
   then simulation data is stored in dat/.
