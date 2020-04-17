@@ -43,7 +43,6 @@ void bc2d(double *f, int nx, int ny, int xoff, int yoff,
     }
   }
   
-  /* Periodic in Y */
   if (dny == 0){
     /* Periodic */
     for (j=0;j<yoff;j++){
