@@ -31,8 +31,8 @@ int main(void)
     tim+=dt;
 
     setbc();
-    mhd_fd_ct_2d(ro,mx,my,mz,en,bx,by,bz,
-    		 dt,dx,dy,nx,ny,XOFF,YOFF,gam);
+    mhd_fd_ct_3d(ro,mx,my,mz,en,bx,by,bz,
+		 dt,dx,dy,dz,nx,ny,nz,XOFF,YOFF,ZOFF,gam);
 
 #if (CFLCHECK)
     cflcheck(dr,&dt);
