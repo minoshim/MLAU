@@ -1,5 +1,5 @@
 --- MLAU two-dimensional code (serial version) ------
- The package is assumed to be instailled at the home directory (~/MLAU).
+ The package is assumed to be installed at the home directory (~/MLAU).
  If not, modify INCLUDE_PATH defined in Makefile.
 
 - Execute a simulation:

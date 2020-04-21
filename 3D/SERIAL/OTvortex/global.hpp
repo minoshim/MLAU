@@ -9,7 +9,7 @@
 
 #define XMESH (200)		// Number of cells in X domain
 #define YMESH (200)		// Number of cells in Y domain
-#define ZMESH (200)		// Number of cells in Z domain
+#define ZMESH (8)		// Number of cells in Z domain
 #define XOFF (4)		// Number of ghost cells in each X side.
 #define YOFF (4)		// Number of ghost cells in each Y side.
 #define ZOFF (4)		// Number of ghost cells in each Z side.
