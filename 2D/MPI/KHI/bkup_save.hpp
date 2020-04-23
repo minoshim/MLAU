@@ -1,8 +1,7 @@
-void bkup_save(int n, int cnt, double tim, double dt, double trec, int mpi_rank)
+void bkup_save(int n, int cnt, double tim, double dt, double trec, int nall, int mpi_rank)
 // Save bkup files
 {
   FILE *outfil;
-  int nall=nx*ny;
   double vald[]={tim,dt,trec};
   char filname[100];
 

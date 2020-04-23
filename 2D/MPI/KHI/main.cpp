@@ -40,7 +40,7 @@ int main(int argc, char* argv[])
 #if (CFLCHECK)
   cflcheck(&dt);
 #endif
-  bkup_load(&n,&cnt,&tim,&dt,&trec,mpi_rank);
+  bkup_load(&n,&cnt,&tim,&dt,&trec,nx*ny,mpi_rank);
   if (n == 0){
     dataio(n,cnt,tim,mpi_rank);
   }
@@ -94,7 +94,7 @@ int main(int argc, char* argv[])
 
       trec+=dtrec;
       cnt++;
-      bkup_save(n,cnt,tim,dt,trec,mpi_rank);
+      bkup_save(n,cnt,tim,dt,trec,nx*ny,mpi_rank);
       dataio(n,cnt,tim,mpi_rank);
       MPI_Barrier(MPI_COMM_WORLD);
       if (mpi_rank == 0) printf("%d / %d iterations finished.\n",n,nmax);

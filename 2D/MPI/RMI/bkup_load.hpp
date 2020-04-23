@@ -1,8 +1,7 @@
-void bkup_load(int *n, int *cnt, double *tim, double *dt, double *trec, int mpi_rank)
+void bkup_load(int *n, int *cnt, double *tim, double *dt, double *trec, int nall, int mpi_rank)
 // Load bkup files
 {
   FILE *infil;
-  int nall=nx*ny;
   int vali[2];
   double vald[3];
   char filname[100];
