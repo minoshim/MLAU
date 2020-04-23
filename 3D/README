@@ -1,0 +1,45 @@
+--- MLAU three-dimensional code (MPI version) ------
+ The package is assumed to be installed at the home directory (~/MLAU).
+ If not, modify INCLUDE_PATH defined in Makefile.
+
+- Execute a simulation:
+  > cd OTvortex/
+  > mkdir dat/
+  > make
+  > mpiexec -np 4 -genv OMP_NUM_THREADS 8 ./a.out
+  where,
+   "4" corresponds to the number of MPI processes, which should be equal to MNP defined in global.hpp,
+   "8" corresponds to the number of OpenMP threads.
+
+  Simulation data is stored in dat/.
+  Simulation parameters are defined in global.hpp
+
+- Select a numerical scheme by editting mhd_fd_ct_2d.c
+  Spatial order => ODR (1, 2, 3, or 4)
+  Temporal order => R_K (1, 2, or 3)
+  Flux function => func_flux (MLAU, HLLD, or ROE)
+
+- Simulation data is handled through IDL (Interactive Data Language), with scripts found in idl/.
+  IDL> .r rddt
+  % Compiled module: $MAIN$.
+  Set data directory: dat
+  % Compiled module: FILE_READS.
+  % $MAIN$: Independent varaibles are loaded.
+  % $MAIN$: To load MHD data, call READ_MHD.
+  IDL> .r read_mhd
+  % Compiled module: $MAIN$.
+  Set time step (0 - 50) : 30
+  Read MHD data at 30 step
+  % Compiled module: BINARY_READ.
+  IDL> help
+  ...
+  
+-----------------------------------------------------
+Copyright 2020 Takashi Minoshima
+
+Github site:  https://github.com/minoshim/MLAU
+
+arXiv site: http://arxiv.org/abs/2004.08012
+
+Contact at Takashi Minoshima <minoshim@jamstec.go.jp>
+-----------------------------------------------------
