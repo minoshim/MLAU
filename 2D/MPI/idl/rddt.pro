@@ -9,8 +9,8 @@ yoff=offsets[1]
 
 params=reform(file_reads(dir+'/params.dat'))
 gamma=params[0]
-beta=params[1]
-lambda=params[2]
+;; beta=params[1]
+;; lambda=params[2]
 
 t=reform(file_reads(dir+'/t.dat'))
 torg=t
@@ -36,11 +36,6 @@ for j=0l,mnp_y-1 do begin
 endfor
 ny=n_elements(y)
 
-;; Re-normalize
-x=x/lambda
-y=y/lambda
-t=t/lambda
-torg2=t
 dx=x[1]-x[0]
 dy=y[1]-y[0]
 idx=1./dx
