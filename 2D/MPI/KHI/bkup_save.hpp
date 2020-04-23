@@ -2,6 +2,7 @@ void bkup_save(int n, int cnt, double tim, double dt, double trec, int mpi_rank)
 // Save bkup files
 {
   FILE *outfil;
+  int nall=nx*ny;
   double vald[]={tim,dt,trec};
   char filname[100];
 
@@ -19,34 +20,34 @@ void bkup_save(int n, int cnt, double tim, double dt, double trec, int mpi_rank)
 
   sprintf(filname,"%s/bkup_ro_%05d.dat",fildir,mpi_rank);
   outfil=fopen(filname,"wb");
-  fwrite(ro,sizeof(double),nx*ny,outfil);
+  fwrite(ro,sizeof(double),nall,outfil);
   fclose(outfil);
   sprintf(filname,"%s/bkup_mx_%05d.dat",fildir,mpi_rank);
   outfil=fopen(filname,"wb");
-  fwrite(mx,sizeof(double),nx*ny,outfil);
+  fwrite(mx,sizeof(double),nall,outfil);
   fclose(outfil);
   sprintf(filname,"%s/bkup_my_%05d.dat",fildir,mpi_rank);
   outfil=fopen(filname,"wb");
-  fwrite(my,sizeof(double),nx*ny,outfil);
+  fwrite(my,sizeof(double),nall,outfil);
   fclose(outfil);
   sprintf(filname,"%s/bkup_mz_%05d.dat",fildir,mpi_rank);
   outfil=fopen(filname,"wb");
-  fwrite(mz,sizeof(double),nx*ny,outfil);
+  fwrite(mz,sizeof(double),nall,outfil);
   fclose(outfil);
   sprintf(filname,"%s/bkup_bx_%05d.dat",fildir,mpi_rank);
   outfil=fopen(filname,"wb");
-  fwrite(bx,sizeof(double),nx*ny,outfil);
+  fwrite(bx,sizeof(double),nall,outfil);
   fclose(outfil);
   sprintf(filname,"%s/bkup_by_%05d.dat",fildir,mpi_rank);
   outfil=fopen(filname,"wb");
-  fwrite(by,sizeof(double),nx*ny,outfil);
+  fwrite(by,sizeof(double),nall,outfil);
   fclose(outfil);
   sprintf(filname,"%s/bkup_bz_%05d.dat",fildir,mpi_rank);
   outfil=fopen(filname,"wb");
-  fwrite(bz,sizeof(double),nx*ny,outfil);
+  fwrite(bz,sizeof(double),nall,outfil);
   fclose(outfil);
   sprintf(filname,"%s/bkup_en_%05d.dat",fildir,mpi_rank);
   outfil=fopen(filname,"wb");
-  fwrite(en,sizeof(double),nx*ny,outfil);
+  fwrite(en,sizeof(double),nall,outfil);
   fclose(outfil);
 }

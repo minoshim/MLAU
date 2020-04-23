@@ -8,10 +8,11 @@ inline void conv_d2f(double vali[], float valo[], unsigned long nn)
 void dataio(int n, int cnt, double tim, int mpi_rank)
 {
   int i;
+  int nall=nx*ny;
   FILE *outfil;
   char filname[100];
   float *val;
-  val=new float[nx*ny];
+  val=new float[nall];
 
   if (n == 0){
     if (mpi_rank == 0){
@@ -53,22 +54,22 @@ void dataio(int n, int cnt, double tim, int mpi_rank)
 
   sprintf(filname,"%s/outdat_%05d_%05d.dat",fildir,cnt,mpi_rank);
   outfil=fopen(filname,"wb");
-  conv_d2f(ro,val,nx*ny);
-  fwrite(val,sizeof(float),nx*ny,outfil);
-  conv_d2f(mx,val,nx*ny);
-  fwrite(val,sizeof(float),nx*ny,outfil);
-  conv_d2f(my,val,nx*ny);
-  fwrite(val,sizeof(float),nx*ny,outfil);
-  conv_d2f(mz,val,nx*ny);
-  fwrite(val,sizeof(float),nx*ny,outfil);
-  conv_d2f(en,val,nx*ny);
-  fwrite(val,sizeof(float),nx*ny,outfil);
-  conv_d2f(bx,val,nx*ny);
-  fwrite(val,sizeof(float),nx*ny,outfil);
-  conv_d2f(by,val,nx*ny);
-  fwrite(val,sizeof(float),nx*ny,outfil);
-  conv_d2f(bz,val,nx*ny);
-  fwrite(val,sizeof(float),nx*ny,outfil);
+  conv_d2f(ro,val,nall);
+  fwrite(val,sizeof(float),nall,outfil);
+  conv_d2f(mx,val,nall);
+  fwrite(val,sizeof(float),nall,outfil);
+  conv_d2f(my,val,nall);
+  fwrite(val,sizeof(float),nall,outfil);
+  conv_d2f(mz,val,nall);
+  fwrite(val,sizeof(float),nall,outfil);
+  conv_d2f(en,val,nall);
+  fwrite(val,sizeof(float),nall,outfil);
+  conv_d2f(bx,val,nall);
+  fwrite(val,sizeof(float),nall,outfil);
+  conv_d2f(by,val,nall);
+  fwrite(val,sizeof(float),nall,outfil);
+  conv_d2f(bz,val,nall);
+  fwrite(val,sizeof(float),nall,outfil);
   fclose(outfil);
 
   delete[] val;

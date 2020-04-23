@@ -2,6 +2,7 @@ void bkup_load(int *n, int *cnt, double *tim, double *dt, double *trec, int mpi_
 // Load bkup files
 {
   FILE *infil;
+  int nall=nx*ny;
   int vali[2];
   double vald[3];
   char filname[100];
@@ -25,35 +26,35 @@ void bkup_load(int *n, int *cnt, double *tim, double *dt, double *trec, int mpi_
     
     sprintf(filname,"%s/bkup_ro_%05d.dat",fildir,mpi_rank);
     infil=fopen(filname,"rb");
-    ttmp=fread(ro,sizeof(double),nx*ny,infil);
+    ttmp=fread(ro,sizeof(double),nall,infil);
     fclose(infil);
     sprintf(filname,"%s/bkup_mx_%05d.dat",fildir,mpi_rank);
     infil=fopen(filname,"rb");
-    ttmp=fread(mx,sizeof(double),nx*ny,infil);
+    ttmp=fread(mx,sizeof(double),nall,infil);
     fclose(infil);
     sprintf(filname,"%s/bkup_my_%05d.dat",fildir,mpi_rank);
     infil=fopen(filname,"rb");
-    ttmp=fread(my,sizeof(double),nx*ny,infil);
+    ttmp=fread(my,sizeof(double),nall,infil);
     fclose(infil);
     sprintf(filname,"%s/bkup_mz_%05d.dat",fildir,mpi_rank);
     infil=fopen(filname,"rb");
-    ttmp=fread(mz,sizeof(double),nx*ny,infil);
+    ttmp=fread(mz,sizeof(double),nall,infil);
     fclose(infil);
     sprintf(filname,"%s/bkup_bx_%05d.dat",fildir,mpi_rank);
     infil=fopen(filname,"rb");
-    ttmp=fread(bx,sizeof(double),nx*ny,infil);
+    ttmp=fread(bx,sizeof(double),nall,infil);
     fclose(infil);
     sprintf(filname,"%s/bkup_by_%05d.dat",fildir,mpi_rank);
     infil=fopen(filname,"rb");
-    ttmp=fread(by,sizeof(double),nx*ny,infil);
+    ttmp=fread(by,sizeof(double),nall,infil);
     fclose(infil);
     sprintf(filname,"%s/bkup_bz_%05d.dat",fildir,mpi_rank);
     infil=fopen(filname,"rb");
-    ttmp=fread(bz,sizeof(double),nx*ny,infil);
+    ttmp=fread(bz,sizeof(double),nall,infil);
     fclose(infil);
     sprintf(filname,"%s/bkup_en_%05d.dat",fildir,mpi_rank);
     infil=fopen(filname,"rb");
-    ttmp=fread(en,sizeof(double),nx*ny,infil);
+    ttmp=fread(en,sizeof(double),nall,infil);
     fclose(infil);
 
     if (mpi_rank == 0) printf("Load backup files at %d steps (T = %f)\n",vali[0],vald[0]);
