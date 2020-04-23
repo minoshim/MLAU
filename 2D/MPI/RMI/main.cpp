@@ -32,7 +32,7 @@ int main(int argc, char* argv[])
   int n=0,cnt=0;
   double tim=0;
   time_t stim,etim;
-  double tlimit=14000;           // Calculation time limit in min
+  double tlimit=1400;           // Calculation time limit in min
 
   new_vals();
   init_grid(mpi_rank);
@@ -90,13 +90,11 @@ int main(int argc, char* argv[])
 
       // NAN/INF check
       MPI_Barrier(MPI_COMM_WORLD);
-      for (int j=0;j<ny;j++){
-      	for (int i=0;i<nx;i++){
-      	  if (finite(ro[nx*j+i]) == 0){
-      	    puts("Calculate halted.");
-      	    MPI_Abort(MPI_COMM_WORLD,-1);
-      	  }
-      	}
+      for (int ss=0;ss<nx*ny;ss++){
+	if (finite(ro[ss]) == 0){
+	  puts("Calculate halted.");
+	  MPI_Abort(MPI_COMM_WORLD,-1);
+	}
       }
 
       trec+=dtrec;
