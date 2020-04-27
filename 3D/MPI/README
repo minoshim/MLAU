@@ -1,4 +1,4 @@
---- MLAU three-dimensional code (serial version) ------
+--- MLAU three-dimensional code (MPI version) ------
  The package is assumed to be installed at the home directory (~/MLAU).
  If not, modify INCLUDE_PATH defined in Makefile.
 
@@ -6,8 +6,12 @@
   > cd OTvortex/
   > mkdir dat/
   > make
-  > ./a.out
-  then simulation data is stored in dat/.
+  > mpiexec -np 8 -genv OMP_NUM_THREADS 4 ./a.out
+  where,
+   "8" corresponds to the number of MPI processes, which should be equal to MNP defined in global.hpp,
+   "4" corresponds to the number of OpenMP threads.
+
+  Simulation data is stored in dat/.
   Simulation parameters are defined in global.hpp
 
 - Select a numerical scheme by editting mhd_fd_ct_3d.c
@@ -29,9 +33,9 @@
   % Compiled module: BINARY_READ.
   IDL> help
   ...
-  BX              DOUBLE    = Array[200, 200, 8]
-  BY              DOUBLE    = Array[200, 200, 8]
-  BZ              DOUBLE    = Array[200, 200, 8]
+  BX              DOUBLE    = Array[100, 100, 100]
+  BY              DOUBLE    = Array[100, 100, 100]
+  BZ              DOUBLE    = Array[100, 100, 100]
   ...
   
 -----------------------------------------------------
