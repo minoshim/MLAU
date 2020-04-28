@@ -1,9 +1,5 @@
-void mpi_sdrv3d(double *f, int nx, int ny, int nz, int xoff, int yoff, int zoff,
+void mpi_sdrv3d(double *f[], int nn, int nx, int ny, int nz, int xoff, int yoff, int zoff,
 		int mpi_rank, int mpi_numx, int mpi_numy, int mpi_numz);
-void mpi_sdrv3d_08(double *f0, double *f1, double *f2, double *f3, 
-		   double *f4, double *f5, double *f6, double *f7,
-		   int nx, int ny, int nz, int xoff, int yoff, int zoff,
-		   int mpi_rank, int mpi_numx, int mpi_numy, int mpi_numz);
 void mpi_xbc3d(double *f, int nx, int ny, int nz, int xoff, int yoff, int zoff, int st, int dn,
 	       int mpi_rank, int mpi_numx, int mpi_numy, int mpi_numz);
 void mpi_ybc3d(double *f, int nx, int ny, int nz, int xoff, int yoff, int zoff, int st, int dn,

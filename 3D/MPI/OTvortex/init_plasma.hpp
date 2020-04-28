@@ -1,4 +1,4 @@
-#define IFLD (0)		// Flag for initial condition. See below
+#define IFLD (6)		// Flag for initial condition. See below
 
 void init_plasma(int mpi_rank)
 // Set initial condition
