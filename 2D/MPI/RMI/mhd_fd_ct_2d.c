@@ -26,12 +26,8 @@
 #define R_K (3)			/* Runge-Kutta order (1,2,3). Never set >3 */
 #define CTW (1)			/* Flag for CT 2D upwind weighting (Minoshima+19, ApJS,242,14) */
 
-void mpi_sdrv2d(double *f, int nx, int ny, int xoff, int yoff, 
+void mpi_sdrv2d(double *f[], int nn, int nx, int ny, int xoff, int yoff, 
 		int mpi_rank, int mpi_numx, int mpi_numy);
-void mpi_sdrv2d_08(double *f0, double *f1, double *f2, double *f3, 
-		   double *f4, double *f5, double *f6, double *f7,
-		   int nx, int ny, int xoff, int yoff, 
-		   int mpi_rank, int mpi_numx, int mpi_numy);
 void mpi_xbc2d(double *f, int nx, int ny, int xoff, int yoff, int st, int dn,
 	       int mpi_rank, int mpi_numx, int mpi_numy);
 void mpi_ybc2d(double *f, int nx, int ny, int xoff, int yoff, int st, int dn,
@@ -127,7 +123,8 @@ void mhd_fd_ct_2d(double *ro, double *mx, double *my, double *mz,
   func_flux=&calc_flux_mlau;
   /* func_flux=&calc_flux_hlld; */
   /* func_flux=&calc_flux_roe; */
-
+  double *p[8];
+  
   ut=(double*)malloc(sizeof(double)*8*nxy);
   ul=(double*)malloc(sizeof(double)*8*nxy);
   ur=(double*)malloc(sizeof(double)*8*nxy);
@@ -197,8 +194,9 @@ void mhd_fd_ct_2d(double *ro, double *mx, double *my, double *mz,
 #pragma omp single
 #endif
       {
-	mpi_sdrv2d(&cx[0],nx,ny,xoff,yoff,mpi_rank,mpi_numx,mpi_numy);
-	mpi_sdrv2d(&cy[0],nx,ny,xoff,yoff,mpi_rank,mpi_numx,mpi_numy);
+	p[0]=cx;
+	p[1]=cy;
+	mpi_sdrv2d(p,2,nx,ny,xoff,yoff,mpi_rank,mpi_numx,mpi_numy);
 	mpi_xbc2d(&cx[0],nx,ny,xoff,yoff,0,+0,mpi_rank,mpi_numx,mpi_numy);
 	mpi_xbc2d(&cy[0],nx,ny,xoff,yoff,0,+0,mpi_rank,mpi_numx,mpi_numy);
 	mpi_ybc2d(&cx[0],nx,ny,xoff,yoff,0,+0,mpi_rank,mpi_numx,mpi_numy);
@@ -271,8 +269,9 @@ void mhd_fd_ct_2d(double *ro, double *mx, double *my, double *mz,
 #pragma omp single
 #endif
       {
-	mpi_sdrv2d(&dvx[0],nx,ny,xoff,yoff,mpi_rank,mpi_numx,mpi_numy);
-	mpi_sdrv2d(&dvy[0],nx,ny,xoff,yoff,mpi_rank,mpi_numx,mpi_numy);
+	p[0]=dvx;
+	p[1]=dvy;
+	mpi_sdrv2d(p,2,nx,ny,xoff,yoff,mpi_rank,mpi_numx,mpi_numy);
 	mpi_xbc2d(&dvx[0],nx,ny,xoff,yoff,0,+0,mpi_rank,mpi_numx,mpi_numy);
 	mpi_xbc2d(&dvy[0],nx,ny,xoff,yoff,0,+0,mpi_rank,mpi_numx,mpi_numy);
 	mpi_ybc2d(&dvx[0],nx,ny,xoff,yoff,0,+0,mpi_rank,mpi_numx,mpi_numy);
@@ -643,8 +642,15 @@ void mhd_fd_ct_2d(double *ro, double *mx, double *my, double *mz,
     } /* OpenMP */
 
     /* Boundary condition */
-    mpi_sdrv2d_08(&ro[0],&mx[0],&my[0],&mz[0],&bx[0],&by[0],&bz[0],&en[0],
-		  nx,ny,xoff,yoff,mpi_rank,mpi_numx,mpi_numy);
+    p[0]=ro;
+    p[1]=mx;
+    p[2]=my;
+    p[3]=mz;
+    p[4]=bx;
+    p[5]=by;
+    p[6]=bz;
+    p[7]=en;
+    mpi_sdrv2d(p,8,nx,ny,xoff,yoff,mpi_rank,mpi_numx,mpi_numy);
     mpi_xbc2d(&ro[0],nx,ny,xoff,yoff,0,+0,mpi_rank,mpi_numx,mpi_numy);
     mpi_xbc2d(&mx[0],nx,ny,xoff,yoff,0,+0,mpi_rank,mpi_numx,mpi_numy);
     mpi_xbc2d(&my[0],nx,ny,xoff,yoff,0,+0,mpi_rank,mpi_numx,mpi_numy);

@@ -1,4 +1,4 @@
-// 2D MHD simulation of KHI
+// 2D MHD simulation
 // MPI+OpenMP
 
 #include "global.hpp"
@@ -49,25 +49,6 @@ int main(int argc, char* argv[])
   stim=MPI_Wtime();
   while(n++ < nmax){
     tim+=dt;
-
-    mpi_sdrv2d_08(ro,mx,my,mz,en,bx,by,bz,
-		  nx,ny,XOFF,YOFF,mpi_rank,mpi_numx,mpi_numy);    
-    mpi_xbc2d(ro,nx,ny,XOFF,YOFF,0,+0,mpi_rank,mpi_numx,mpi_numy);
-    mpi_xbc2d(mx,nx,ny,XOFF,YOFF,0,+0,mpi_rank,mpi_numx,mpi_numy);
-    mpi_xbc2d(my,nx,ny,XOFF,YOFF,0,+0,mpi_rank,mpi_numx,mpi_numy);
-    mpi_xbc2d(mz,nx,ny,XOFF,YOFF,0,+0,mpi_rank,mpi_numx,mpi_numy);
-    mpi_xbc2d(en,nx,ny,XOFF,YOFF,0,+0,mpi_rank,mpi_numx,mpi_numy);
-    mpi_xbc2d(bx,nx,ny,XOFF,YOFF,1,+0,mpi_rank,mpi_numx,mpi_numy);
-    mpi_xbc2d(by,nx,ny,XOFF,YOFF,0,+0,mpi_rank,mpi_numx,mpi_numy);
-    mpi_xbc2d(bz,nx,ny,XOFF,YOFF,0,+0,mpi_rank,mpi_numx,mpi_numy);
-    mpi_ybc2d(ro,nx,ny,XOFF,YOFF,0,+1,mpi_rank,mpi_numx,mpi_numy);
-    mpi_ybc2d(mx,nx,ny,XOFF,YOFF,0,+1,mpi_rank,mpi_numx,mpi_numy);
-    mpi_ybc2d(my,nx,ny,XOFF,YOFF,0,-1,mpi_rank,mpi_numx,mpi_numy);
-    mpi_ybc2d(mz,nx,ny,XOFF,YOFF,0,+1,mpi_rank,mpi_numx,mpi_numy);
-    mpi_ybc2d(en,nx,ny,XOFF,YOFF,0,+1,mpi_rank,mpi_numx,mpi_numy);
-    mpi_ybc2d(bx,nx,ny,XOFF,YOFF,0,+1,mpi_rank,mpi_numx,mpi_numy);
-    mpi_ybc2d(by,nx,ny,XOFF,YOFF,1,-1,mpi_rank,mpi_numx,mpi_numy);
-    mpi_ybc2d(bz,nx,ny,XOFF,YOFF,0,+1,mpi_rank,mpi_numx,mpi_numy);
 
     mhd_fd_ct_2d(ro,mx,my,mz,en,bx,by,bz,
 		 dt,dx,dy,nx,ny,XOFF,YOFF,gam,
