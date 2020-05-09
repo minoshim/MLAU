@@ -34,7 +34,6 @@ inline void mhd_eigen_st(double ro, double vx, double vy, double vz, double bx, 
 {
   double eps=1e-12;
   double sqrt2=sqrt(2.0);
-  double isqrt2=1.0/sqrt2;
 
   /* Wave speeds */
   double iro=1.0/ro;
@@ -54,7 +53,7 @@ inline void mhd_eigen_st(double ro, double vx, double vy, double vz, double bx, 
   double ca2=bx2;
   double ca=sqrt(ca2);
   double junk;
-  junk=sqrt(fabs((a2+b2)*(a2+b2)-4.0*a2*bx2));
+  junk=sqrt(fabs((a2+b2)*(a2+b2)-4.0*a2*ca2));
   double cf2=fabs(0.5*(a2+b2+junk));
   double cf=sqrt(cf2);
   double cs2=fabs(0.5*(a2+b2-junk));
@@ -64,23 +63,21 @@ inline void mhd_eigen_st(double ro, double vx, double vy, double vz, double bx, 
   bx2=bx*bx;
   bt2=by*by+bz*bz;
   b2=bx2+bt2;
-  double sbt2=sqrt(bt2);
-  double isbt2=1.0/sbt2;
+  double denom=1.0/sqrt(bt2);
   int flag;
   flag=(bt2 > eps*b2);
-  double betay=(flag)?(by*isbt2):(0.5*sqrt(2.0));
-  double betaz=(flag)?(bz*isbt2):(0.5*sqrt(2.0));
-  double scfcs=sqrt(fabs(cf2-cs2));
-  double iscfcs=1.0/scfcs;
+  double betay=(flag)?(by*denom):(0.5*sqrt2);
+  double betaz=(flag)?(bz*denom):(0.5*sqrt2);
+  denom=1.0/sqrt(fabs(cf2-cs2));
   flag=((bt2 > eps*b2) || (fabs(gamma*pr-bx2) > eps*gamma*pr));
-  double alphaf=(flag)?(sqrt(fabs(a2-cs2))*iscfcs):1.0;
-  double alphas=(flag)?(sqrt(fabs(cf2-a2))*iscfcs):0.0;
+  double alphaf=(flag)?(sqrt(fabs(a2-cs2))*denom):1.0;
+  double alphas=(flag)?(sqrt(fabs(cf2-a2))*denom):0.0;
   double sgnbx=(bx > 0)?(1.0):(-1.0);
   double cfalf=cf*alphaf;
   double csals=cs*alphas;
   double aaalf=aa*alphaf;
   double aaals=aa*alphas;
-  double denom=0.5/a2;
+  denom=0.5/a2;
 
   /* Eigenvalues */
   *al1=(vx-cf);
@@ -114,7 +111,7 @@ inline void mhd_eigen_st(double ro, double vx, double vy, double vz, double bx, 
   l2[5]=+0.5*isro*betay*sgnbx;
   l2[6]=0;
   l6[0]=+l2[0];
-  l6[1]=+l2[1];
+  l6[1]=-l2[1];
   l6[2]=-l2[2];
   l6[3]=-l2[3];
   l6[4]=+l2[4];
@@ -165,7 +162,7 @@ inline void mhd_eigen_st(double ro, double vx, double vy, double vz, double bx, 
   r2[5]=+sro*betay*sgnbx;
   r2[6]=0;
   r6[0]=+r2[0];
-  r6[1]=+r2[1];
+  r6[1]=-r2[1];
   r6[2]=-r2[2];
   r6[3]=-r2[3];
   r6[4]=+r2[4];
