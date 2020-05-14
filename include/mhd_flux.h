@@ -119,6 +119,9 @@ inline void calc_flux_mlau(double rol, double vnl, double vtl, double vul, doubl
   ptot-=0.25*bfl*bfr*(rol+ror)*cfmod*(vnr-vnl); /* AUSM+-up-like correction */
   ptot-=0.5*(1.0-cfmod*cfni)*(bfl+bfr-1.0)*(ptl+ptr); /* SLAU2-like correction */
 
+  /* ptot=0.5*(+(ptl+ptr)-(bfl-bfr)*(ptr-ptl) */
+  /* 	    +0.5*(bfl+bfr-1.0)*(rol+ror)*cfn*cfmod); /\* Simple form, seem to work well *\/ */
+
   /* Normal velocity */
   double slvl=sl-vnl;
   double srvr=sr-vnr;
