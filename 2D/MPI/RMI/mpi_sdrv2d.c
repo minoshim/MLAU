@@ -77,8 +77,8 @@ void mpi_sdrv2d(double *f[], int nn, int nx, int ny, int xoff, int yoff,
     for (n=0;n<nn;n++){
       for (j=0;j<ny;j++){
 	for (i=0;i<xoff;i++){
-	f[n][nx*j+(nx-1-i)]=f[n][nx*j+(2*xoff-1-i)];
-	f[n][nx*j+i]=f[n][nx*j+(nx-2*xoff+i)];
+	  f[n][nx*j+(nx-1-i)]=f[n][nx*j+(2*xoff-1-i)];
+	  f[n][nx*j+i]=f[n][nx*j+(nx-2*xoff+i)];
 	}
       }
     }
@@ -130,8 +130,8 @@ void mpi_sdrv2d(double *f[], int nn, int nx, int ny, int xoff, int yoff,
     for (n=0;n<nn;n++){
       for (j=0;j<yoff;j++){
 	for (i=0;i<nx;i++){
-	f[n][nx*(ny-1-j)+i]=f[n][nx*(2*yoff-1-j)+i];
-	f[n][nx*j+i]=f[n][nx*(ny-2*yoff+j)+i];
+	  f[n][nx*(ny-1-j)+i]=f[n][nx*(2*yoff-1-j)+i];
+	  f[n][nx*j+i]=f[n][nx*(ny-2*yoff+j)+i];
 	}
       }
     }

@@ -143,8 +143,8 @@ void mpi_sdrv3d(double *f[], int nn, int nx, int ny, int nz, int xoff, int yoff,
       for (k=0;k<nz;k++){
 	for (j=0;j<yoff;j++){
 	  for (i=0;i<nx;i++){
-	  f[n][nx*(ny*k+(ny-1-j))+i]=f[n][nx*(ny*k+(2*yoff-1-j))+i];
-	  f[n][nx*(ny*k+j)+i]=f[n][nx*(ny*k+(ny-2*yoff+j))+i];
+	    f[n][nx*(ny*k+(ny-1-j))+i]=f[n][nx*(ny*k+(2*yoff-1-j))+i];
+	    f[n][nx*(ny*k+j)+i]=f[n][nx*(ny*k+(ny-2*yoff+j))+i];
 	  }
 	}
       }
@@ -202,8 +202,8 @@ void mpi_sdrv3d(double *f[], int nn, int nx, int ny, int nz, int xoff, int yoff,
       for (k=0;k<zoff;k++){
 	for (j=0;j<ny;j++){
 	  for (i=0;i<nx;i++){
-	  f[n][nx*(ny*(nz-1-k)+j)+i]=f[n][nx*(ny*(2*zoff-1-k)+j)+i];
-	  f[n][nx*(ny*k+j)+i]=f[n][nx*(ny*(nz-2*zoff+k)+j)+i];
+	    f[n][nx*(ny*(nz-1-k)+j)+i]=f[n][nx*(ny*(2*zoff-1-k)+j)+i];
+	    f[n][nx*(ny*k+j)+i]=f[n][nx*(ny*(nz-2*zoff+k)+j)+i];
 	  }
 	}
       }
