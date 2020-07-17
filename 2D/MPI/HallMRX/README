@@ -1,0 +1,16 @@
+--- Magnetic reconnection with MLAU two-dimensional code (MPI version) ------
+ Resistive diffusion (magnetic field) and viscous diffusion (velocity field) are included.
+ Diffusion coefficients are treated as uniform.
+ To activate these solvers, set DIFF being 1 and tune eta0 and nu0 in global.hpp
+
+-----------------------------------------------------
+Copyright 2020 Takashi Minoshima
+
+Github site:  https://github.com/minoshim/MLAU
+
+Journal site: https://iopscience.iop.org/article/10.3847/1538-4365/ab8aee
+
+arXiv site: http://arxiv.org/abs/2004.08012
+
+Contact at Takashi Minoshima <minoshim@jamstec.go.jp>
+-----------------------------------------------------
