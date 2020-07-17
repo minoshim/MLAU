@@ -52,6 +52,25 @@ inline void muscl_mc_cal_flr(double f1, double f2, double f3,
   (*fr)=f2-df;
 }
 
+inline double muscl_kr_cal_f(double fu, double f0, double fd)
+{
+  /* Return f between f0 and fd with Koren limiter */
+  double df1=2.0*(fu-f0);
+  double df2=2.0*(f0-fd);
+  return(f0-0.5*minmod3(df1,df2,(0.5*df1+df2)/3.0));
+}
+inline void muscl_kr_cal_flr(double f1, double f2, double f3,
+			     double *fl, double *fr)
+{
+  /* Return f2.5_l and f1.5_r with Koren limiter */
+  double df1=2.0*(f2-f1);
+  double df2=2.0*(f3-f2);
+  double dfl=0.5*minmod3(df1,df2,(0.5*df1+df2)/3.0);
+  double dfr=0.5*minmod3(df1,df2,(df1+0.5*df2)/3.0);
+  (*fl)=f2+dfl;
+  (*fr)=f2-dfr;
+}
+
 /* WCNS routines */
 inline double wcns3_cal_f(double fup, double f, double fdn)
 /* 3rd order WCNS interpolation between f and fdn */

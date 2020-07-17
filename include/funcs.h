@@ -36,5 +36,11 @@ inline double minmod(double a, double b)
 	 +max(min(a,b),0));
 }
 
+inline double minmod3(double a, double b, double c)
+{
+  return(+min(max(max(a,b),c),0)
+	 +max(min(min(a,b),c),0));
+}
+
 #endif
 
