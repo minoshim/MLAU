@@ -25,7 +25,7 @@
 #define ODR (2)			/* Spatial order (1,2,3,4) */
 #define R_K (3)			/* Runge-Kutta order (1,2,3). Never set >3 */
 #define CTW (1)			/* Flag for CT 2D upwind weighting (Minoshima+19, ApJS,242,14) */
-#define HDF (0)			/* Flag for hyper diffusion (used for Hall solver) */
+#define HDF (1)			/* Flag for hyper diffusion (used for Hall solver) */
 
 void mhd_fd_ct_2d(double *ro, double *mx, double *my, double *mz,
 		  double *en, double *bx, double *by, double *bz,
@@ -1213,7 +1213,7 @@ void hall_fd_ct_2d(double *ro, double *mx, double *my, double *mz,
   const double idx=1./dx,idy=1./dy;
   const double pi=4.0*atan(1.0);
   const double vphix=eta_h*pi*idx,vphiy=eta_h*pi*idy; /* Maximum whistler phase vel. */
-  const double alpha=0.5;	/* Factor for hyper diffusion (<1) */  
+  const double alpha=0.5;	/* Factor for hyper diffusion (<1) */
   double *ut,*ul,*ur,*ql,*qr,*fx,*fy;
   double *cx,*cy,*ez;
   double *ctx,*fc,eps=1e-6;
@@ -1531,7 +1531,7 @@ void hall_fd_ct_2d(double *ro, double *mx, double *my, double *mz,
 	  fx[4*ss+3]=flux[3];	/* en */
 
 #if (HDF)
-	  /* Hyper diffusion term */	  
+	  /* Hyper diffusion term */
 	  fx[4*ss+1]+=0.125*alpha*smax*(d2ur[3*ss+0]-d2ul[3*ss+0]);
 	  fx[4*ss+2]+=0.125*alpha*smax*(d2ur[3*ss+1]-d2ul[3*ss+1]);
 	  fx[4*ss+3]+=0.125*alpha*smax*(d2ur[3*ss+2]-d2ul[3*ss+2]);
@@ -1721,7 +1721,7 @@ void hall_fd_ct_2d(double *ro, double *mx, double *my, double *mz,
 	  fy[4*ss+3]=flux[3];	/* en */
 
 #if (HDF)
-	  /* Hyper diffusion term */	  
+	  /* Hyper diffusion term */
 	  fy[4*ss+2]+=0.125*alpha*smax*(d2ur[3*ss+0]-d2ul[3*ss+0]);
 	  fy[4*ss+0]+=0.125*alpha*smax*(d2ur[3*ss+1]-d2ul[3*ss+1]);
 	  fy[4*ss+3]+=0.125*alpha*smax*(d2ur[3*ss+2]-d2ul[3*ss+2]);

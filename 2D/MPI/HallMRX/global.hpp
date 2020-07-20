@@ -8,8 +8,8 @@
 #include <time.h>
 #include "myfunc.h"
 
-#define XMESH (2048)		// Number of cells in X domain
-#define YMESH (128)		// Number of cells in Y domain
+#define XMESH (4096)		// Number of cells in X domain
+#define YMESH (256)		// Number of cells in Y domain
 #define XOFF (4)		// Number of ghost cells in each X side.
 #define YOFF (4)		// Number of ghost cells in each Y side.
 
