@@ -69,7 +69,7 @@ namespace global
   const double eta_h=HALL*iner_p*sqrt(ro0); // Hall resistivity
   
   double vfast=fmode(ro0,beta*b0*b0,b0*b0,gam);
-  double vw=eta_h*pi/dr;	// Whistler phase velocity
+  double vw=eta_h*2*pi/dr;	// Whistler phase velocity
   double dt=cfl*dr/vfast; // Time step
   double dtw=cfl*dr/(vfast+vw);	// Time step for Hall term
   

@@ -1212,7 +1212,7 @@ void hall_fd_ct_2d(double *ro, double *mx, double *my, double *mz,
   const double dtdx=dt/dx,dtdy=dt/dy;
   const double idx=1./dx,idy=1./dy;
   const double pi=4.0*atan(1.0);
-  const double vphix=eta_h*pi*idx,vphiy=eta_h*pi*idy; /* Maximum whistler phase vel. */
+  const double vphix=eta_h*2*pi*idx,vphiy=eta_h*2*pi*idy; /* Maximum whistler phase vel. */
   const double alpha=0.5;	/* Factor for hyper diffusion (<1) */
   double *ut,*ul,*ur,*ql,*qr,*fx,*fy;
   double *cx,*cy,*ez;
@@ -1517,10 +1517,11 @@ void hall_fd_ct_2d(double *ro, double *mx, double *my, double *mz,
       for (j=0;j<ny;j++){
 #pragma simd
 	for (i=3;i<nx-2;i++){
-	  double bn,smax,flux[4];
+	  double bn,smax=0,flux[4];
 	  ss=nx*j+i;
 	  bn=0.5*(ul[8*ss+4]+ur[8*ss+4]);
-	  smax=max(fabs(ul[8*ss+1]),fabs(ur[8*ss+1]))+vphix*fabs(bn/min(ul[8*ss+0],ur[8*ss+0]));
+	  smax+=max(fabs(ul[8*ss+1]),fabs(ur[8*ss+1])); /* Hall velocity */
+	  smax+=vphix*fabs(bn/(0.5*(ul[8*ss+0]+ur[8*ss+0]))); /* Whistler velocity */
 	  hall_flux_lf(ul[8*ss+0],ul[8*ss+1],ul[8*ss+2],ul[8*ss+3],ul[8*ss+5],ul[8*ss+6],ul[8*ss+7],
 		       ur[8*ss+0],ur[8*ss+1],ur[8*ss+2],ur[8*ss+3],ur[8*ss+5],ur[8*ss+6],ur[8*ss+7],
 		       bn,smax,
@@ -1707,10 +1708,11 @@ void hall_fd_ct_2d(double *ro, double *mx, double *my, double *mz,
       for (j=3;j<ny-2;j++){
 #pragma simd
 	for (i=0;i<nx;i++){
-	  double bn,smax,flux[4];
+	  double bn,smax=0,flux[4];
 	  ss=nx*j+i;
 	  bn=0.5*(ul[8*ss+4]+ur[8*ss+4]);
-	  smax=max(fabs(ul[8*ss+1]),fabs(ur[8*ss+1]))+vphiy*fabs(bn/min(ul[8*ss+0],ur[8*ss+0]));
+	  smax+=max(fabs(ul[8*ss+1]),fabs(ur[8*ss+1])); /* Hall velocity */
+	  smax+=vphiy*fabs(bn/(0.5*(ul[8*ss+0]+ur[8*ss+0]))); /* Whistler velocity */
 	  hall_flux_lf(ul[8*ss+0],ul[8*ss+1],ul[8*ss+2],ul[8*ss+3],ul[8*ss+5],ul[8*ss+6],ul[8*ss+7],
 		       ur[8*ss+0],ur[8*ss+1],ur[8*ss+2],ur[8*ss+3],ur[8*ss+5],ur[8*ss+6],ur[8*ss+7],
 		       bn,smax,
