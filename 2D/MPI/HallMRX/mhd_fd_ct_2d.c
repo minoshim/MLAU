@@ -1212,7 +1212,7 @@ void hall_fd_ct_2d(double *ro, double *mx, double *my, double *mz,
   const double dtdx=dt/dx,dtdy=dt/dy;
   const double idx=1./dx,idy=1./dy;
   const double pi=4.0*atan(1.0);
-  const double vphix=eta_h*2*pi*idx,vphiy=eta_h*2*pi*idy; /* Maximum whistler phase vel. */
+  const double vphix=eta_h*pi*idx,vphiy=eta_h*pi*idy; /* Maximum whistler phase vel. */
   const double alpha=0.5;	/* Factor for hyper diffusion (<1) */
   double *ut,*ul,*ur,*ql,*qr,*fx,*fy;
   double *cx,*cy,*ez;
