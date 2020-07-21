@@ -1,0 +1,15 @@
+--- Hall OT vortex problem with MLAU two-dimensional code (serial version) ------
+ To activate the Hall term, set HALL being 1 and tune iner_p in global.hpp
+ Default initial condition is the same as adopted in Amano, T. (2015) J. Comput. Phys. 299, 863
+
+-----------------------------------------------------
+Copyright 2020 Takashi Minoshima
+
+Github site:  https://github.com/minoshim/MLAU
+
+Journal site: https://iopscience.iop.org/article/10.3847/1538-4365/ab8aee
+
+arXiv site: http://arxiv.org/abs/2004.08012
+
+Contact at Takashi Minoshima <minoshim@jamstec.go.jp>
+-----------------------------------------------------
