@@ -53,6 +53,7 @@ int main(int argc, char* argv[])
   while(n++ < nmax){
     tim+=dt;
 
+    // Sub-cycling the Hall term
 #if (HALL)
     nwmax=1+(int)(dt/dtw);
     for (nw=0;nw<nwmax;nw++){

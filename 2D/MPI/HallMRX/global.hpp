@@ -47,7 +47,7 @@ namespace global
   const double idy=1.0/dy;
   const double gam=5./3.;	// Specific heat ratio
   const double dr=((dx < dy)?dx:dy);
-  const double cfl=0.4;		// CFL number
+  const double cfl=0.2;		// CFL number
   const char fildir[]="dat/";	// Directory for file output
 
   // Current sheet parameters
