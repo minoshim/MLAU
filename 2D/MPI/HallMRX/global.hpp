@@ -18,7 +18,7 @@
 #define MNP (MNP_X*MNP_Y)	// Total number of MPI processes
 
 #define CFLCHECK (1)		// Flag to modify dt at every step
-#define RANDOM (1)		// Flag for random noise to Vy
+#define RANDOM (0)		// Flag for random noise to Vy
 #define DIFF (1)		// Flag for diffusion
 #define HALL (1)		// Flag for Hall-MHD
 
