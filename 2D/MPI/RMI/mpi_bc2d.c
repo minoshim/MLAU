@@ -37,7 +37,7 @@ void mpi_xbc2d(double *f, int nx, int ny, int xoff, int yoff, int st, int dn,
     /* Right */
     if ((mpi_rank % mpi_numx) == (mpi_numx-1)){
       for (j=0;j<ny;j++){
-	for (i=0;i<xoff;i++) f[nx*j+(nx-1-i)]=dn*f[nx*j+(nx-2*xoff+st)+i];
+	for (i=0;i<xoff-st;i++) f[nx*j+(nx-1-i)]=dn*f[nx*j+(nx-2*xoff+st)+i];
       }
     }
   }
@@ -59,7 +59,7 @@ void mpi_ybc2d(double *f, int nx, int ny, int xoff, int yoff, int st, int dn,
     }
     /* Right */
     if (mpi_rank/mpi_numx == (mpi_numy-1)){
-      for (j=0;j<yoff;j++){
+      for (j=0;j<yoff-st;j++){
 	for (i=0;i<nx;i++) f[nx*(ny-1-j)+i]=dn*f[nx*((ny-2*yoff+st)+j)+i];
       }
     }

@@ -37,7 +37,11 @@ void bc2d(double *f, int nx, int ny, int xoff, int yoff,
     /* Dirichlet (dn = -1) or Neumann (dn = +1) */
     for (j=0;j<ny;j++){
       for (i=0;i<xoff;i++){
+	/* Left */
 	f[nx*j+i]=dnx*f[nx*j+(2*xoff-1+stx)-i];
+      }
+      for (i=0;i<xoff-stx;i++){
+	/* Right */
 	f[nx*j+(nx-1-i)]=dnx*f[nx*j+(nx-2*xoff+stx)+i];
       }
     }
@@ -55,7 +59,13 @@ void bc2d(double *f, int nx, int ny, int xoff, int yoff,
     /* Dirichlet (dn = -1) or Neumann (dn = +1) */
     for (j=0;j<yoff;j++){
       for (i=0;i<nx;i++){
+	/* Left */
 	f[nx*j+i]=dny*f[nx*(2*yoff-1+sty-j)+i];	
+      }
+    }
+    for (j=0;j<yoff-sty;j++){
+      for (i=0;i<nx;i++){
+	/* Right */
 	f[nx*(ny-1-j)+i]=dny*f[nx*(ny-2*yoff+sty+j)+i];
       }
     }

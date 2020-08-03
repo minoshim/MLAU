@@ -43,7 +43,7 @@ void mpi_xbc3d(double *f, int nx, int ny, int nz, int xoff, int yoff, int zoff, 
     if (((mpi_rank%m_xy)%mpi_numx) == (mpi_numx-1)){
       for (k=0;k<nz;k++){
         for (j=0;j<ny;j++){
-	  for (i=0;i<xoff;i++) f[nx*(ny*k+j)+(nx-1-i)]=dn*f[nx*(ny*k+j)+(nx-2*xoff+st)+i];
+	  for (i=0;i<xoff-st;i++) f[nx*(ny*k+j)+(nx-1-i)]=dn*f[nx*(ny*k+j)+(nx-2*xoff+st)+i];
         }
       }
     }
@@ -70,7 +70,7 @@ void mpi_ybc3d(double *f, int nx, int ny, int nz, int xoff, int yoff, int zoff, 
     /* Right */
     if (((mpi_rank%m_xy)/mpi_numx) == (mpi_numy-1)){
       for (k=0;k<nz;k++){
-	for (j=0;j<yoff;j++){
+	for (j=0;j<yoff-st;j++){
 	  for (i=0;i<nx;i++) f[nx*(ny*k+(ny-1-j))+i]=dn*f[nx*(ny*k+(ny-2*yoff+st)+j)+i];
 	}
       }
@@ -97,7 +97,7 @@ void mpi_zbc3d(double *f, int nx, int ny, int nz, int xoff, int yoff, int zoff, 
     }
     /* Right */
     if ((mpi_rank/m_xy) == (mpi_numz-1)){
-      for (k=0;k<zoff;k++){
+      for (k=0;k<zoff-st;k++){
 	for (j=0;j<ny;j++){
 	  for (i=0;i<nx;i++) f[nx*(ny*(nz-1-k)+j)+i]=dn*f[nx*(ny*((nz-2*zoff+st)+k)+j)+i];
 	}

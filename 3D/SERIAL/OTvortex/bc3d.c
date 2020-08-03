@@ -39,7 +39,11 @@ void bc3d(double *f, int nx, int ny, int nz, int xoff, int yoff, int zoff,
     for (k=0;k<nz;k++){
       for (j=0;j<ny;j++){
 	for (i=0;i<xoff;i++){
+	  /* Left */
 	  f[nx*(ny*k+j)+(     i)]=dnx*f[nx*(ny*k+j)+( 2*xoff-1+stx-i)];
+	}
+	for (i=0;i<xoff-stx;i++){
+	  /* Right */
 	  f[nx*(ny*k+j)+(nx-1-i)]=dnx*f[nx*(ny*k+j)+(nx-2*xoff+stx+i)];
 	}
       }
@@ -61,7 +65,13 @@ void bc3d(double *f, int nx, int ny, int nz, int xoff, int yoff, int zoff,
     for (k=0;k<nz;k++){
       for (j=0;j<yoff;j++){
 	for (i=0;i<nx;i++){
+	  /* Left */
 	  f[nx*(ny*k+(     j))+i]=dny*f[nx*(ny*k+( 2*yoff-1+sty-j))+i];	
+	}
+      }
+      for (j=0;j<yoff-sty;j++){
+	for (i=0;i<nx;i++){
+	  /* Right */
 	  f[nx*(ny*k+(ny-1-j))+i]=dny*f[nx*(ny*k+(ny-2*yoff+sty+j))+i];
 	}
       }
@@ -83,7 +93,15 @@ void bc3d(double *f, int nx, int ny, int nz, int xoff, int yoff, int zoff,
     for (k=0;k<zoff;k++){
       for (j=0;j<ny;j++){
 	for (i=0;i<nx;i++){
+	  /* Left */
 	  f[nx*(ny*(     k)+j)+i]=dnz*f[nx*(ny*( 2*zoff-1+stz-k)+j)+i];
+	}
+      }
+    }
+    for (k=0;k<zoff-stz;k++){
+      for (j=0;j<ny;j++){
+	for (i=0;i<nx;i++){
+	  /* Right */
 	  f[nx*(ny*(nz-1-k)+j)+i]=dnz*f[nx*(ny*(nz-2*zoff+stz+k)+j)+i];	  
 	}
       }
