@@ -8,13 +8,13 @@
 #include <time.h>
 #include "myfunc.h"
 
-#define XMESH (4096)		// Number of cells in X domain
+#define XMESH (2048)		// Number of cells in X domain
 #define YMESH (256)		// Number of cells in Y domain
 #define XOFF (4)		// Number of ghost cells in each X side.
 #define YOFF (4)		// Number of ghost cells in each Y side.
 
-#define MNP_X (16)		// Number of MPI processes in X
-#define MNP_Y (1)		// Number of MPI processes in Y
+#define MNP_X (8)		// Number of MPI processes in X
+#define MNP_Y (2)		// Number of MPI processes in Y
 #define MNP (MNP_X*MNP_Y)	// Total number of MPI processes
 
 #define CFLCHECK (1)		// Flag to modify dt at every step
@@ -34,10 +34,10 @@ namespace global
   // Parameters
   int nrec=100;		// Number of steps for output
   int nmax=nrec*100;		// Number of maximum iteration
-  const double dtrec=10.0; 	// Time step for output  
+  const double dtrec=1.0; 	// Time step for output
   double trec=dtrec;
 
-  const double lx=512.0;         // Spatial domain in X
+  const double lx=128.0;         // Spatial domain in X
   const double ly=lx*(double)YMESH/XMESH;// Spatial domain in Y
   const double xmin=-0.5*lx;		 // Minimum of x
   const double ymin=-0.5*ly;		 // Minimum of y
@@ -63,6 +63,8 @@ namespace global
   const double eta0=DIFF*1.0*lambda/5e2; // Uniform resistivity
   const double prm=1e0;			 // Magnetic Prandtl number
   const double nu0=prm*eta0;		 // Uniform kinetic viscosity
+  const double kk0=DIFF*0e-1;		 // Thermal conductivity
+  const double prn=nu0/kk0;		 // Prandtl number
 
   // Hall parameters
   const double iner_p=0.5*lambda; // Ion inertia length
