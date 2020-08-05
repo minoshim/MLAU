@@ -15,6 +15,7 @@
 /* You should have received a copy of the GNU General Public License */
 /* along with MLAU.  If not, see <https://www.gnu.org/licenses/>. */
 
+#include "mpi.h"
 #include <stdlib.h>
 #include <math.h>
 #include <omp.h>
@@ -25,6 +26,8 @@
 #define ODR (2)			/* Spatial order (1,2,3,4) */
 #define R_K (3)			/* Runge-Kutta order (1,2,3). Never set >3 */
 #define CTW (1)			/* Flag for CT 2D upwind weighting (Minoshima+19, ApJS,242,14) */
+
+#define CMAX (2048)		/* Maximum iteration in diffusion2d_ani */
 
 void mhd_fd_ct_2d(double *ro, double *mx, double *my, double *mz,
 		  double *en, double *bx, double *by, double *bz,
@@ -42,6 +45,23 @@ void ns_viscous_2d(const double *ro, double *mx, double *my, double *mz,
 		   double dt, double dx, double dy,
 		   int nx, int ny, int xoff, int yoff, double gamma,
 		   int mpi_rank, int mpi_numx, int mpi_numy);
+void mhd_e2p(const double *ro, const double *mx, const double *my, const double *mz,
+	     double *en, const double *bx, const double *by, const double *bz,
+	     int nx, int ny, int xoff, int yoff, double gamma, int direc,
+	     int mpi_rank, int mpi_numx, int mpi_numy);
+void diffusion2d_ani(double *f, const double *g,
+		     double *kxx, double *kyy, double *kxy,
+		     double dt, double dx, double dy,
+		     int nx, int ny, int xoff, int yoff,
+		     int stx, int dnx, int sty, int dny,
+		     int mpi_rank, int mpi_numx, int mpi_numy,
+		     int *err);
+void t_conduction(const double *ro, const double *mx, const double *my, const double *mz,
+		  double *en, const double *bx, const double *by, const double *bz,
+		  double kk0,
+		  double dt, double dx, double dy,
+		  int nx, int ny, int xoff, int yoff, double gamma,
+		  int mpi_rank, int mpi_numx, int mpi_numy);
 
 void mpi_sdrv2d(double *f[], int nn, int nx, int ny, int xoff, int yoff, 
 		int mpi_rank, int mpi_numx, int mpi_numy);
@@ -1159,4 +1179,286 @@ void ns_viscous_2d(const double *ro, double *mx, double *my, double *mz,
   free(ut);
   free(fx);
   free(fy);
+}
+
+void mhd_e2p(const double *ro, const double *mx, const double *my, const double *mz,
+	     double *en, const double *bx, const double *by, const double *bz,
+	     int nx, int ny, int xoff, int yoff, double gamma, int direc,
+	     int mpi_rank, int mpi_numx, int mpi_numy)
+/* Convert total Energy to Pressure for MHD */
+/* EOS for ideal gas is used */
+/* direc should be 1 or -1 */
+/* if direc == -1, convert Pressure to total Energy */
+{
+  double (*func_bc)(const double*)=&calc_bc;
+
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+  for (int j=1;j<ny-2;j++){
+    double iro,vx,vy,vz;
+    double bxc,byc,bzc;
+    double v2,b2;
+    double tmp[2];
+    for (int i=1;i<nx-2;i++){
+      int ss=nx*j+i;
+      double valx[]={bx[nx*j+(i-1)],bx[nx*j+(i+0)],
+		     bx[nx*j+(i+1)],bx[nx*j+(i+2)]};
+      double valy[]={by[nx*(j-1)+i],by[nx*(j+0)+i],
+		     by[nx*(j+1)+i],by[nx*(j+2)+i]};
+      iro=1.0/ro[ss];
+      vx=mx[ss]*iro;
+      vy=my[ss]*iro;
+      vz=mz[ss]*iro;
+      bxc=func_bc(valx);
+      byc=func_bc(valy);
+      bzc=bz[nx*j+i];
+
+      v2=(vx*vx+vy*vy+vz*vz);
+      b2=(bxc*bxc+byc*byc+bzc*bzc);
+      tmp[0]=(gamma-1)*(en[ss]-0.5*(ro[ss]*v2+b2)); /* en => pr */
+      tmp[1]=en[ss]/(gamma-1)+0.5*(ro[ss]*v2+b2);   /* pr => en */
+      en[ss]=0.5*((1+direc)*tmp[0]+(1-direc)*tmp[1]);
+    }
+  }
+  mpi_sdrv2d(&en,1,nx,ny,xoff,yoff,mpi_rank,mpi_numx,mpi_numy);
+  mpi_xbc2d(en,nx,ny,xoff,yoff,0,+0,mpi_rank,mpi_numx,mpi_numy);
+  mpi_ybc2d(en,nx,ny,xoff,yoff,0,+1,mpi_rank,mpi_numx,mpi_numy);
+}
+
+void diffusion2d_ani(double *f, const double *g,
+		     double *kxx, double *kyy, double *kxy,
+		     double dt, double dx, double dy,
+		     int nx, int ny, int xoff, int yoff,
+		     int stx, int dnx, int sty, int dny,
+		     int mpi_rank, int mpi_numx, int mpi_numy,
+		     int *err)
+/* Solve 2D anisotropic diffusion equation */
+/* g df/dt = d/dx(g kxx df/dx)+d/dy(g kyy df/dy)+d/dy(g kxy df/dx)+d/dx(g kxy df/dy) */
+/* Used for Thermal conduction under B-field (f=Temperature, g=density) */
+{
+  int i,j,ss;
+  int pass_x,pass_y,isw,jsw;
+  const int od4=(ODR-1)/2;
+  const double dx2=dx*dx,dy2=dy*dy;
+  const double idx2=1.0/dx2,idy2=1.0/dy2,idxy=1.0/(dx*dy);
+  double *denom;
+  double anorm,anorm_f=0.0;
+  double antmp,antmpf,antmp_all,antmpf_all;
+  double resid,omega=1.0;
+  int cnt=0l,cnt_min;
+  const double alpha=0.5;	/* 0.5=CN, 1.0=Full implicit */
+  const double beta=1.0-alpha;
+  const double dt0=dt;
+  const double d1=1.0+0.25*od4,d2=1.0*od4/12.0;
+  const double eps=1e-6;
+  double *ig;
+  double *rhs;
+
+  denom=(double*)malloc(sizeof(double)*nx*ny);
+  ig=(double*)malloc(sizeof(double)*nx*ny);
+  rhs=(double*)malloc(sizeof(double)*nx*ny);
+
+  for (j=0;j<ny;j++){
+    for (i=0;i<nx;i++){
+      ss=nx*j+i;
+      ig[ss]=1.0/g[ss];
+      /* Coefficients multiplied by g */
+      kxx[ss]*=g[ss];
+      kyy[ss]*=g[ss];
+      kxy[ss]*=g[ss];
+    }
+  }
+#ifdef _OPENMP
+#pragma omp parallel for private(j,i,ss,dt) reduction(+:anorm_f)
+#endif
+  for (j=2;j<ny-2;j++){
+    int ssim,ssip,ssjm,ssjp;
+    int ssim2,ssip2,ssjm2,ssjp2;
+    double kf[4];
+    for (i=2;i<nx-2;i++){
+      ss=nx*j+i;
+      ssim=nx*j+(i-1);
+      ssip=nx*j+(i+1);
+      ssjm=nx*(j-1)+i;
+      ssjp=nx*(j+1)+i;
+      ssim2=nx*j+(i-2);
+      ssip2=nx*j+(i+2);
+      ssjm2=nx*(j-2)+i;
+      ssjp2=nx*(j+2)+i;
+      kf[0]=0.5*(kxx[ssim]+kxx[ss]);
+      kf[1]=0.5*(kxx[ssip]+kxx[ss]);
+      kf[2]=0.5*(kyy[ssjm]+kyy[ss]);
+      kf[3]=0.5*(kyy[ssjp]+kyy[ss]);
+      dt=dt0*ig[ss];
+      denom[ss]=1.0/(1.0+alpha*dt*d1*(idx2*(kf[0]+kf[1])+idy2*(kf[2]+kf[3])));
+      rhs[ss]=f[ss]+beta*dt*((+idx2*(+kf[0]*(d1*(f[ssim]-f[ss])-d2*(f[ssim2]-f[ssip]))
+				     +kf[1]*(d1*(f[ssip]-f[ss])-d2*(f[ssip2]-f[ssim])))
+			      +idy2*(+kf[2]*(d1*(f[ssjm]-f[ss])-d2*(f[ssjm2]-f[ssjp]))
+				     +kf[3]*(d1*(f[ssjp]-f[ss])-d2*(f[ssjp2]-f[ssjm]))))
+			     +0.25*(+idxy*(+kxy[ssjm]*(f[nx*(j-1)+(i-1)]-f[nx*(j-1)+(i+1)])
+					   +kxy[ssjp]*(f[nx*(j+1)+(i+1)]-f[nx*(j+1)+(i-1)])
+					   +kxy[ssim]*(f[nx*(j-1)+(i-1)]-f[nx*(j+1)+(i-1)])
+					   +kxy[ssip]*(f[nx*(j+1)+(i+1)]-f[nx*(j-1)+(i+1)]))));
+      anorm_f+=fabs(rhs[ss]*denom[ss]);
+    }
+  }
+  antmpf_all=0;
+  antmpf=anorm_f;
+  MPI_Allreduce(&antmpf,&antmpf_all,1,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
+  anorm_f=antmpf_all;
+
+  do{
+    anorm=0.0;
+    for (pass_y=0;pass_y<2;pass_y++){
+      jsw=2+pass_y;
+      for (pass_x=0;pass_x<3;pass_x++){
+
+#ifdef _OPENMP
+#pragma omp parallel for private(j,isw,i,ss,resid,dt) reduction(+:anorm)
+#endif
+	for (j=jsw;j<ny-2;j+=2){
+	  int ssim,ssip,ssjm,ssjp;
+	  int ssim2,ssip2,ssjm2,ssjp2;
+	  double kf[4];
+	  isw=4-((j+pass_x) % 3);
+	  for (i=isw;i<nx-2;i+=3){
+	    ss=nx*j+i;
+	    ssim=nx*j+(i-1);
+	    ssip=nx*j+(i+1);
+	    ssjm=nx*(j-1)+i;
+	    ssjp=nx*(j+1)+i;
+	    ssim2=nx*j+(i-2);
+	    ssip2=nx*j+(i+2);
+	    ssjm2=nx*(j-2)+i;
+	    ssjp2=nx*(j+2)+i;
+	    kf[0]=0.5*(kxx[ssim]+kxx[ss]);
+	    kf[1]=0.5*(kxx[ssip]+kxx[ss]);
+	    kf[2]=0.5*(kyy[ssjm]+kyy[ss]);
+	    kf[3]=0.5*(kyy[ssjp]+kyy[ss]);
+	    dt=dt0*ig[ss];
+
+	    resid=(alpha*dt*
+		   ((+idx2*(+kf[0]*(d1*f[ssim]-d2*(f[ssim2]-f[ssip]))
+			    +kf[1]*(d1*f[ssip]-d2*(f[ssip2]-f[ssim])))
+		     +idy2*(+kf[2]*(d1*f[ssjm]-d2*(f[ssjm2]-f[ssjp]))
+			    +kf[3]*(d1*f[ssjp]-d2*(f[ssjp2]-f[ssjm]))))
+		    +0.25*(+idxy*(+kxy[ssjm]*(f[nx*(j-1)+(i-1)]-f[nx*(j-1)+(i+1)])
+				  +kxy[ssjp]*(f[nx*(j+1)+(i+1)]-f[nx*(j+1)+(i-1)])
+				  +kxy[ssim]*(f[nx*(j-1)+(i-1)]-f[nx*(j+1)+(i-1)])
+				  +kxy[ssip]*(f[nx*(j+1)+(i+1)]-f[nx*(j-1)+(i+1)]))))+rhs[ss])*denom[ss]-f[ss];
+
+	    anorm+=fabs(resid);
+	    f[ss]+=omega*resid;
+	  }
+	}
+      }
+    }
+    mpi_sdrv2d(&f,1,nx,ny,xoff,yoff,mpi_rank,mpi_numx,mpi_numy);
+    mpi_xbc2d(f,nx,ny,xoff,yoff,stx,dnx,mpi_rank,mpi_numx,mpi_numy);
+    mpi_ybc2d(f,nx,ny,xoff,yoff,sty,dny,mpi_rank,mpi_numx,mpi_numy);
+
+    antmp_all=0;
+    antmp=anorm;
+    MPI_Allreduce(&antmp,&antmp_all,1,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
+    anorm=antmp_all;
+
+    cnt++;
+    MPI_Allreduce(&cnt,&cnt_min,1,MPI_INT,MPI_MIN,MPI_COMM_WORLD);
+  }while((anorm > eps*anorm_f) && (cnt_min < CMAX));
+
+  /* Return coefficients */
+  for (j=0;j<ny;j++){
+    for (i=0;i<nx;i++){
+      ss=nx*j+i;
+      kxx[ss]*=ig[ss];
+      kyy[ss]*=ig[ss];
+      kxy[ss]*=ig[ss];
+    }
+  }
+
+  /* Convergence check */
+  if (cnt_min == CMAX) (*err)=-1;
+
+  free(denom);
+  free(ig);
+  free(rhs);
+}
+
+void t_conduction(const double *ro, const double *mx, const double *my, const double *mz,
+		  double *en, const double *bx, const double *by, const double *bz,
+		  double kk0,
+		  double dt, double dx, double dy,
+		  int nx, int ny, int xoff, int yoff, double gamma,
+		  int mpi_rank, int mpi_numx, int mpi_numy)
+/* Solve anisotropic temperature conduction */
+{
+  int i,j,ss;
+  double *kxx,*kyy,*kxy;
+  double eps=1e-6;
+  double *p[3];
+  double (*func_bc)(const double*)=&calc_bc;
+  int err=0;
+  static int tc_msg=0;
+  if (tc_msg == 0 && mpi_rank == 0){
+    puts("Fully implicit scheme is used for heat conduction.");
+    tc_msg=1;
+  }
+  kxx=(double*)malloc(sizeof(double)*nx*ny);
+  kyy=(double*)malloc(sizeof(double)*nx*ny);
+  kxy=(double*)malloc(sizeof(double)*nx*ny);
+
+  /* Anisotcopic diffusion coefficients */
+  for (j=1;j<ny-2;j++){
+    double bxc,byc,bzc,ib2;
+    for (i=1;i<nx-2;i++){
+      ss=nx*j+i;
+      double valx[]={bx[nx*j+(i-1)],bx[nx*j+(i+0)],
+		     bx[nx*j+(i+1)],bx[nx*j+(i+2)]};
+      double valy[]={by[nx*(j-1)+i],by[nx*(j+0)+i],
+		     by[nx*(j+1)+i],by[nx*(j+2)+i]};
+      bxc=func_bc(valx);
+      byc=func_bc(valy);
+      bzc=bz[ss];
+      ib2=1.0/(bxc*bxc+byc*byc+bzc*bzc+eps);
+      kxx[ss]=kk0*(bxc*bxc+eps)*ib2;
+      kyy[ss]=kk0*(byc*byc+eps)*ib2;
+      kxy[ss]=kk0*(bxc*byc)*ib2;
+    }
+  }
+  p[0]=kxx;
+  p[1]=kyy;
+  p[2]=kxy;
+  mpi_sdrv2d(p,3,nx,ny,xoff,yoff,mpi_rank,mpi_numx,mpi_numy);
+  mpi_xbc2d(kxx,nx,ny,xoff,yoff,0,+0,mpi_rank,mpi_numx,mpi_numy);
+  mpi_xbc2d(kyy,nx,ny,xoff,yoff,0,+0,mpi_rank,mpi_numx,mpi_numy);
+  mpi_xbc2d(kxy,nx,ny,xoff,yoff,0,+0,mpi_rank,mpi_numx,mpi_numy);
+  mpi_ybc2d(kxx,nx,ny,xoff,yoff,0,+1,mpi_rank,mpi_numx,mpi_numy);
+  mpi_ybc2d(kyy,nx,ny,xoff,yoff,0,+1,mpi_rank,mpi_numx,mpi_numy);
+  mpi_ybc2d(kxy,nx,ny,xoff,yoff,0,-1,mpi_rank,mpi_numx,mpi_numy);
+
+  /* Energy => Pressure */
+  mhd_e2p(ro,mx,my,mz,en,bx,by,bz,nx,ny,xoff,yoff,gamma,+1,mpi_rank,mpi_numx,mpi_numy);
+  // Pressure => Temperature
+  for (ss=0;ss<nx*ny;ss++) en[ss]/=ro[ss];
+  /* Solve diffusion equation */
+  diffusion2d_ani(en,ro,kxx,kyy,kxy,dt,dx,dy,nx,ny,xoff,yoff,0,+0,0,+1,
+		  mpi_rank,mpi_numx,mpi_numy,&err);
+  // Temperature => Pressure
+  for (ss=0;ss<nx*ny;ss++) en[ss]*=ro[ss];
+  /* Pressure => Energy */
+  mhd_e2p(ro,mx,my,mz,en,bx,by,bz,nx,ny,xoff,yoff,gamma,-1,mpi_rank,mpi_numx,mpi_numy);
+
+  // Convergence check
+  if (err == -1){
+    if (mpi_rank == 0){
+      puts("Heat conduction did not converge. Calculation halted.");
+      puts("Try relaxing threshold.");
+    }
+    MPI_Abort(MPI_COMM_WORLD,-1);
+  }
+
+  free(kxx);
+  free(kyy);
+  free(kxy);
 }

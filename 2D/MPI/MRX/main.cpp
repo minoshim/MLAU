@@ -65,6 +65,11 @@ int main(int argc, char* argv[])
 		    dt,dx,dy,nx,ny,XOFF,YOFF,gam,
 		    mpi_rank,mpi_numx,mpi_numy);
     }
+    if (kk0  != 0){
+      t_conduction(ro,mx,my,mz,en,bx,by,bz,kk0,
+		   dt,dx,dy,nx,ny,XOFF,YOFF,gam,
+		   mpi_rank,mpi_numx,mpi_numy);
+    }
 #endif
     
 #if (CFLCHECK)

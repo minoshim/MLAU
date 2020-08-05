@@ -20,6 +20,23 @@ void ns_viscous_2d(const double *ro, double *mx, double *my, double *mz,
 		   double dt, double dx, double dy,
 		   int nx, int ny, int xoff, int yoff, double gamma,
 		   int mpi_rank, int mpi_numx, int mpi_numy);
+void mhd_e2p(const double *ro, const double *mx, const double *my, const double *mz,
+	     double *en, const double *bx, const double *by, const double *bz,
+	     int nx, int ny, int xoff, int yoff, double gamma, int direc,
+	     int mpi_rank, int mpi_numx, int mpi_numy);
+void diffusion2d_ani(double *f, const double *g,
+		     double *kxx, double *kyy, double *kxy,
+		     double dt, double dx, double dy,
+		     int nx, int ny, int xoff, int yoff,
+		     int stx, int dnx, int sty, int dny,
+		     int mpi_rank, int mpi_numx, int mpi_numy,
+		     int *err);
+void t_conduction(const double *ro, const double *mx, const double *my, const double *mz,
+		  double *en, const double *bx, const double *by, const double *bz,
+		  double kk0,
+		  double dt, double dx, double dy,
+		  int nx, int ny, int xoff, int yoff, double gamma,
+		  int mpi_rank, int mpi_numx, int mpi_numy);
   
 inline double harris_field(double x, const double *params)
 {

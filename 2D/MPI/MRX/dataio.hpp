@@ -18,7 +18,7 @@ void dataio(int n, int cnt, double tim, int mpi_rank)
     if (mpi_rank == 0){
       sprintf(filname,"%s/params.dat",fildir);
       outfil=fopen(filname,"w");
-      fprintf(outfil,"%f %f %f %f %f\n",gam,beta,lambda,eta0,nu0);
+      fprintf(outfil,"%f %f %f %f %f %f\n",gam,beta,lambda,eta0,nu0,kk0);
       fclose(outfil);
       
       sprintf(filname,"%s/offsets.dat",fildir);
