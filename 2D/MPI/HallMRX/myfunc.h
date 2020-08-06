@@ -37,6 +37,11 @@ void t_conduction(const double *ro, const double *mx, const double *my, const do
 		  double dt, double dx, double dy,
 		  int nx, int ny, int xoff, int yoff, double gamma,
 		  int mpi_rank, int mpi_numx, int mpi_numy);
+void hall_fd_ct_2d(double *ro, double *mx, double *my, double *mz,
+		   double *en, double *bx, double *by, double *bz,
+		   double dt, double dx, double dy,
+		   int nx, int ny, int xoff, int yoff, double eta_h,
+		   int mpi_rank, int mpi_numx, int mpi_numy);
   
 inline double harris_field(double x, const double *params)
 {

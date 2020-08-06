@@ -1,7 +1,8 @@
---- Magnetic reconnection with MLAU two-dimensional code (MPI version) ------
+--- Hall Magnetic reconnection with MLAU two-dimensional code (MPI version) ------
  Resistive diffusion (magnetic field), viscous diffusion (velocity field), and anisotropic thermal condution (Temperature)  are included.
+ Hall effect is included.
  Diffusion coefficients are treated as uniform.
- To activate these solvers, set DIFF being 1 and tune eta0, nu0, and kk0 in global.hpp
+ To activate these solvers, set DIFF and HALL being 1 and tune eta0, nu0, kk0, and iner_p in global.hpp
 
 -----------------------------------------------------
 Copyright 2020 Takashi Minoshima

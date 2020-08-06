@@ -32,24 +32,37 @@ int main(int argc, char* argv[])
   double tim=0;
   time_t stim,etim;
   double tlimit=1400;           // Calculation time limit in min
+  int nw,nwmax;
 
   new_vals();
   init_grid(mpi_rank);
   init_plasma(mpi_rank);
 
 #if (CFLCHECK)
-  cflcheck(&dt);
+  cflcheck(&dt ,0);		// MHD part
+  cflcheck(&dtw,1);		// Hall part
 #endif
   bkup_load(&n,&cnt,&tim,&dt,&trec,nx*ny,mpi_rank);
   if (n == 0){
     dataio(n,cnt,tim,mpi_rank);
   }
-  cflcomment(dr,dt,mpi_rank);
+  cflcomment(dr,dt, 0,mpi_rank); // MHD part
+  cflcomment(dr,dtw,1,mpi_rank); // Hall part
   
   stim=MPI_Wtime();
   while(n++ < nmax){
     tim+=dt;
 
+    // Sub-cycling the Hall term
+#if (HALL)
+    nwmax=1+(int)(dt/dtw);
+    for (nw=0;nw<nwmax;nw++){
+      hall_fd_ct_2d(ro,mx,my,mz,en,bx,by,bz,
+		    dt/nwmax,dx,dy,nx,ny,XOFF,YOFF,eta_h,
+		    mpi_rank,mpi_numx,mpi_numy);
+    }
+#endif
+    
     mhd_fd_ct_2d(ro,mx,my,mz,en,bx,by,bz,
 		 dt,dx,dy,nx,ny,XOFF,YOFF,gam,
 		 mpi_rank,mpi_numx,mpi_numy);
@@ -73,7 +86,8 @@ int main(int argc, char* argv[])
 #endif
     
 #if (CFLCHECK)
-    cflcheck(&dt);
+    cflcheck(&dt ,0);		// MHD part
+    cflcheck(&dtw,1);		// Hall part
 #endif
 
     // Output

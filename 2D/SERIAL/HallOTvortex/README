@@ -1,7 +1,6 @@
---- Magnetic reconnection with MLAU two-dimensional code (MPI version) ------
- Resistive diffusion (magnetic field), viscous diffusion (velocity field), and anisotropic thermal condution (Temperature)  are included.
- Diffusion coefficients are treated as uniform.
- To activate these solvers, set DIFF being 1 and tune eta0, nu0, and kk0 in global.hpp
+--- Hall OT vortex problem with MLAU two-dimensional code (serial version) ------
+ To activate the Hall term, set HALL being 1 and tune iner_p in global.hpp
+ Default initial condition is the same as adopted in Amano, T. (2015) J. Comput. Phys. 299, 863
 
 -----------------------------------------------------
 Copyright 2020 Takashi Minoshima

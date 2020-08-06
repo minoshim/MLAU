@@ -581,4 +581,35 @@ inline void calc_flux_hlld(double rol, double vnl, double vtl, double vul, doubl
   *fen=(enu+ptc)*vnc-bnc*(vtu*btu+vuu*buu);
 }
 
+inline void hall_flux_lf(double rol, double vnl, double vtl, double vul, double btl, double bul, double enl,
+			 double ror, double vnr, double vtr, double vur, double btr, double bur, double enr,
+			 double bnc, double smax,
+			 double *fbt, double *fbu, double *fen)
+/* Calculate Lax-Friedrichs fluxes for Hall term */
+/* rol,vnl,vtl,vul,btl,bul,enl: input variables at the left side. v is Hall velocity -j/nec*/
+/* ror,vnr,vtr,vur,btr,bur,enr: input variables at the right side */
+/* bnc: input normal magnetic field at the interface */
+/* smax: Maximum velocity */
+/* fbt,fbu,fen: output LF fluxes at the interface*/
+{
+  /* Variables at the left-face */
+  double pml=0.5*(bnc*bnc+btl*btl+bul*bul);
+  double vbl=vnl*bnc+vtl*btl+vul*bul;
+  /* Variables at the right-face */
+  double pmr=0.5*(bnc*bnc+btr*btr+bur*bur);
+  double vbr=vnr*bnc+vtr*btr+vur*bur;
+  /* Fluxes at the left-face */
+  double fbtl=btl*vnl-bnc*vtl;
+  double fbul=bul*vnl-bnc*vul;
+  double fenl=2.0*pml*vnl-bnc*vbl;
+  /* FLuxes at the right-face */
+  double fbtr=btr*vnr-bnc*vtr;
+  double fbur=bur*vnr-bnc*vur;
+  double fenr=2.0*pmr*vnr-bnc*vbr;
+  /* LF fluxes */
+  *fbt=0.5*(fbtl+fbtr-smax*(btr-btl));
+  *fbu=0.5*(fbul+fbur-smax*(bur-bul));
+  *fen=0.5*(fenl+fenr-smax*(pmr-pml));
+}
+
 #endif

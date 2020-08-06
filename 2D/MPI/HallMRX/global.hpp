@@ -18,8 +18,9 @@
 #define MNP (MNP_X*MNP_Y)	// Total number of MPI processes
 
 #define CFLCHECK (1)		// Flag to modify dt at every step
-#define RANDOM (1)		// Flag for random noise to Vy
+#define RANDOM (0)		// Flag for random noise to Vy
 #define DIFF (1)		// Flag for diffusion
+#define HALL (1)		// Flag for Hall-MHD
 
 namespace global
 {
@@ -64,10 +65,16 @@ namespace global
   const double nu0=prm*eta0;		 // Uniform kinetic viscosity
   const double kk0=DIFF*0e-1;		 // Thermal conductivity
   const double prn=nu0/kk0;		 // Prandtl number
+
+  // Hall parameters
+  const double iner_p=0.5*lambda; // Ion inertia length
+  const double eta_h=HALL*iner_p*sqrt(ro0); // Hall resistivity
   
   double vfast=fmode(ro0,beta*b0*b0,b0*b0,gam);
+  double vw=eta_h*pi/dr;	// Whistler phase velocity
   double dt=cfl*dr/vfast; // Time step
-
+  double dtw=cfl*dr/(vfast+vw);	// Time step for Hall term
+  
   // Variables
   double *x,*y;
   double *ro,*mx,*my,*mz,*en,*bx,*by,*bz;

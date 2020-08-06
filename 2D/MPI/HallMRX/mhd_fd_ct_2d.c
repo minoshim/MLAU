@@ -29,6 +29,8 @@
 
 #define CMAX (2048)		/* Maximum iteration in diffusion2d_ani */
 
+#define HDF (1)			/* Flag for hyper diffusion (used for Hall solver) */
+
 void mhd_fd_ct_2d(double *ro, double *mx, double *my, double *mz,
 		  double *en, double *bx, double *by, double *bz,
 		  double dt, double dx, double dy,
@@ -62,6 +64,11 @@ void t_conduction(const double *ro, const double *mx, const double *my, const do
 		  double dt, double dx, double dy,
 		  int nx, int ny, int xoff, int yoff, double gamma,
 		  int mpi_rank, int mpi_numx, int mpi_numy);
+void hall_fd_ct_2d(double *ro, double *mx, double *my, double *mz,
+		   double *en, double *bx, double *by, double *bz,
+		   double dt, double dx, double dy,
+		   int nx, int ny, int xoff, int yoff, double eta_h,
+		   int mpi_rank, int mpi_numx, int mpi_numy);
 
 void mpi_sdrv2d(double *f[], int nn, int nx, int ny, int xoff, int yoff, 
 		int mpi_rank, int mpi_numx, int mpi_numy);
@@ -86,8 +93,10 @@ inline void lcal_flr(const double *f, double *fl, double *fr)
 #if (ODR == 1)
   *fl=f[2]; *fr=f[2];
 #elif (ODR == 2)
-  (*fl)=0.25*(-f[1]+4.0*f[2]+f[3]);
-  (*fr)=0.25*(-f[3]+4.0*f[2]+f[1]);
+  /* (*fl)=0.25*(-f[1]+4.0*f[2]+f[3]); */
+  /* (*fr)=0.25*(-f[3]+4.0*f[2]+f[1]); */
+  (*fl)=(-f[1]+5.0*f[2]+2.0*f[3])/6.0;
+  (*fr)=(-f[3]+5.0*f[2]+2.0*f[1])/6.0;
 #elif (ODR == 3)
   (*fl)=0.125*(-f[1]+6.0*f[2]+3.0*f[3]);
   (*fr)=0.125*(-f[3]+6.0*f[2]+3.0*f[1]);
@@ -104,7 +113,8 @@ inline void calc_flr(const double *f, double *fl, double *fr)
   *fl=f[2]; *fr=f[2];
 #elif (ODR == 2)
   /* muscl_mm_cal_flr(f[1],f[2],f[3],fl,fr); */
-  muscl_mc_cal_flr(f[1],f[2],f[3],fl,fr);
+  /* muscl_mc_cal_flr(f[1],f[2],f[3],fl,fr); */
+  muscl_kr_cal_flr(f[1],f[2],f[3],fl,fr);
 #elif (ODR == 3)
   wcns3_cal_flr(f[1],f[2],f[3],fl,fr);
 #else
@@ -119,6 +129,25 @@ inline double calc_df(const double *f)
   return(f[2]-f[1]);
 #else
   return((27.0*(f[2]-f[1])-(f[3]-f[0]))/24.0);
+#endif
+}
+inline double calc_dfc(const double *f)
+/* Evaluate 1st difference from co-located points */
+{
+#if (ODR <= 2)
+  return(0.5*(f[3]-f[1]));
+#else
+  return((8.0*(f[3]-f[1])-(f[4]-f[0]))/12.0);
+#endif
+}
+
+inline double calc_d2fc(const double *f)
+/* Evaluate 2nd difference from co-located points */
+{
+#if (ODR <= 2)
+  return((2.0*f[2]-(f[3]+f[1])));
+#else
+  return((-30.0*f[2]+16.0*(f[3]+f[1])-(f[4]+f[0]))/12.0);
 #endif
 }
 
@@ -1461,4 +1490,705 @@ void t_conduction(const double *ro, const double *mx, const double *my, const do
   free(kxx);
   free(kyy);
   free(kxy);
+}
+
+void hall_fd_ct_2d(double *ro, double *mx, double *my, double *mz,
+		   double *en, double *bx, double *by, double *bz,
+		   double dt, double dx, double dy,
+		   int nx, int ny, int xoff, int yoff, double eta_h,
+		   int mpi_rank, int mpi_numx, int mpi_numy)
+/* 2D finite-difference code for Hall term */
+/* 2nd, 3rd, and 4th order */
+/* LFF + Central-Upwind-CT */
+/* Need four offsets (maximum) for boundary */
+    
+/* ro: density */
+/* m?: moment */
+/* en: energy normalized by B^2/(4 pi) */
+/* b?: magnetic field */
+/* eta_h: Hall resistivity (= va^2/(ion gyro freq.) */
+{
+  int i,j,ss,rk;
+  const int ns=5;		/* number of grids in stencil */
+  const double rk_fac[3][2]={{0.0,1.0},{0.5+(R_K-2)*0.25,0.5-(R_K-2)*0.25},{1./3.,2./3.}};
+  const int nxy=nx*ny;
+  const double dtdx=dt/dx,dtdy=dt/dy;
+  const double idx=1./dx,idy=1./dy;
+  const double pi=4.0*atan(1.0);
+  const double vphix=eta_h*pi*idx,vphiy=eta_h*pi*idy; /* Maximum whistler phase vel. */
+  const double alpha=0.5;	/* Factor for hyper diffusion (<1) */
+  double *ut,*ul,*ur,*ql,*qr,*fx,*fy;
+  double *cx,*cy,*ez;
+  double *ctx,*fc,eps=1e-6;
+  double *hx,*hy,*hz;		/* Hall velocity, -j/nec */
+  double *b2;
+  double *d2u,*d2ul,*d2ur;			/* 2nd derivative for Hyper diffusion */
+  double (*func_bc)(const double*)=&calc_bc;
+  void (*func_lr)(const double*, double*, double*)=&calc_flr;
+  void (*lfun_lr)(const double*, double*, double*)=&lcal_flr;
+  double (*func_df)(const double*)=&calc_df;
+  double (*func_dfc)(const double*)=&calc_dfc;
+  double (*func_d2fc)(const double*)=&calc_d2fc;
+  double *p[4];
+  
+  ut=(double*)malloc(sizeof(double)*4*nxy);
+  ul=(double*)malloc(sizeof(double)*8*nxy);
+  ur=(double*)malloc(sizeof(double)*8*nxy);
+  ql=(double*)malloc(sizeof(double)*nxy);
+  qr=(double*)malloc(sizeof(double)*nxy);
+  fx=(double*)malloc(sizeof(double)*4*nxy);
+  fy=(double*)malloc(sizeof(double)*4*nxy);
+  cx=(double*)malloc(sizeof(double)*nxy);
+  cy=(double*)malloc(sizeof(double)*nxy);
+  ez=(double*)malloc(sizeof(double)*nxy);
+  ctx=(double*)malloc(sizeof(double)*nxy);
+  fc=(double*)malloc(sizeof(double)*nxy);
+  hx=(double*)malloc(sizeof(double)*nxy);
+  hy=(double*)malloc(sizeof(double)*nxy);
+  hz=(double*)malloc(sizeof(double)*nxy);
+  b2=(double*)malloc(sizeof(double)*nxy);
+  d2u=(double*)malloc(sizeof(double)*3*nxy);
+  d2ul=(double*)malloc(sizeof(double)*3*nxy);
+  d2ur=(double*)malloc(sizeof(double)*3*nxy);
+
+  /* Copy */
+  for (j=0;j<ny;j++){
+    for (i=0;i<nx;i++){
+      ss=nx*j+i;
+      ut[4*ss+0]=bx[ss];
+      ut[4*ss+1]=by[ss];
+      ut[4*ss+2]=bz[ss];
+      ut[4*ss+3]=en[ss];
+    }
+  }
+
+  for (rk=0;rk<R_K;rk++){
+    
+#ifdef _OPENMP
+#pragma omp parallel private(i,j,ss)
+#endif
+    {
+
+      /* Calculate B at cell center */
+#ifdef _OPENMP
+#pragma omp for nowait
+#endif
+      for (j=0;j<ny;j++){
+#pragma simd
+	for (i=1;i<nx-2;i++){
+	  double val[]={bx[nx*j+(i-1)],bx[nx*j+(i+0)],
+			bx[nx*j+(i+1)],bx[nx*j+(i+2)]};
+	  cx[nx*j+i]=func_bc(val);
+	}
+      }
+#ifdef _OPENMP
+#pragma omp for
+#endif
+      for (j=1;j<ny-2;j++){
+#pragma simd
+	for (i=0;i<nx;i++){
+	  double val[]={by[nx*(j-1)+i],by[nx*(j+0)+i],
+			by[nx*(j+1)+i],by[nx*(j+2)+i]};
+	  cy[nx*j+i]=func_bc(val);
+	}
+      }
+#ifdef _OPENMP
+#pragma omp single
+#endif
+      {
+	p[0]=cx;
+	p[1]=cy;
+	mpi_sdrv2d(p,2,nx,ny,xoff,yoff,mpi_rank,mpi_numx,mpi_numy);
+	mpi_xbc2d(&cx[0],nx,ny,xoff,yoff,0,+0,mpi_rank,mpi_numx,mpi_numy);
+	mpi_xbc2d(&cy[0],nx,ny,xoff,yoff,0,+0,mpi_rank,mpi_numx,mpi_numy);
+	mpi_ybc2d(&cx[0],nx,ny,xoff,yoff,0,+1,mpi_rank,mpi_numx,mpi_numy);
+	mpi_ybc2d(&cy[0],nx,ny,xoff,yoff,0,-1,mpi_rank,mpi_numx,mpi_numy);
+      }
+
+      /* Calculate Hall velocity at cell center */
+#ifdef _OPENMP
+#pragma omp for
+#endif
+      for (j=2;j<ny-2;j++){
+	int sim2,sim1,sip0,sip1,sip2;
+	int sjm2,sjm1,sjp0,sjp1,sjp2;
+	double jx,jy,jz,tmp;
+#pragma simd
+	for (i=2;i<nx-2;i++){
+	  ss=nx*j+i;
+	  sim2=nx*j+(i-2);
+	  sim1=nx*j+(i-1);
+	  sip0=nx*j+(i+0);
+	  sip1=nx*j+(i+1);
+	  sip2=nx*j+(i+2);
+	  sjm2=nx*(j-2)+i;
+	  sjm1=nx*(j-1)+i;
+	  sjp0=nx*(j+0)+i;
+	  sjp1=nx*(j+1)+i;
+	  sjp2=nx*(j+2)+i;
+	  double dbx1[]={cx[sjm2],cx[sjm1],cx[sjp0],cx[sjp1],cx[sjp2]};
+	  double dby0[]={cy[sim2],cy[sim1],cy[sip0],cy[sip1],cy[sip2]};
+	  double dbz0[]={bz[sim2],bz[sim1],bz[sip0],bz[sip1],bz[sip2]};
+	  double dbz1[]={bz[sjm2],bz[sjm1],bz[sjp0],bz[sjp1],bz[sjp2]};
+	  jx=+func_dfc(dbz1)*idy;
+	  jy=-func_dfc(dbz0)*idx;
+	  jz=+func_dfc(dby0)*idx-func_dfc(dbx1)*idy;
+	  tmp=eta_h/ro[ss];
+	  hx[ss]=-tmp*jx;
+	  hy[ss]=-tmp*jy;
+	  hz[ss]=-tmp*jz;
+	}
+      }
+#ifdef _OPENMP
+#pragma omp single
+#endif
+      {
+	p[0]=hx;
+	p[1]=hy;
+	p[2]=hz;
+	mpi_sdrv2d(p,3,nx,ny,xoff,yoff,mpi_rank,mpi_numx,mpi_numy);
+	mpi_xbc2d(&hx[0],nx,ny,xoff,yoff,0,+0,mpi_rank,mpi_numx,mpi_numy);
+	mpi_xbc2d(&hy[0],nx,ny,xoff,yoff,0,+0,mpi_rank,mpi_numx,mpi_numy);
+	mpi_xbc2d(&hz[0],nx,ny,xoff,yoff,0,+0,mpi_rank,mpi_numx,mpi_numy);
+	mpi_ybc2d(&hx[0],nx,ny,xoff,yoff,0,+1,mpi_rank,mpi_numx,mpi_numy);
+	mpi_ybc2d(&hy[0],nx,ny,xoff,yoff,0,-1,mpi_rank,mpi_numx,mpi_numy);
+	mpi_ybc2d(&hz[0],nx,ny,xoff,yoff,0,+1,mpi_rank,mpi_numx,mpi_numy);
+      }
+
+      /* Some variables */
+#ifdef _OPENMP
+#pragma omp for
+#endif
+      for (j=0;j<ny;j++){
+#pragma simd
+	for (i=0;i<nx;i++){
+	  ss=nx*j+i;
+	  ez[ss]=0.0;
+	  ctx[ss]=0.5;
+	  b2[ss]=0.5*(cx[ss]*cx[ss]+cy[ss]*cy[ss]+bz[ss]*bz[ss]);
+	}
+      }
+      /* CT E-field 2D upwind weighting */
+#if (CTW)
+#ifdef _OPENMP
+#pragma omp for
+#endif
+      for (j=1;j<ny;j++){
+	double vxc,vyc,roc,bxc,byc;
+#pragma simd
+	for (i=1;i<nx;i++){
+	  /* Upwinding with respect to whistler mode */
+	  vxc=0.25*(hx[nx*(j-1)+(i-1)]+hx[nx*(j-1)+i]+
+		    hx[nx*j+(i-1)]+hx[nx*j+i]);
+	  vyc=0.25*(hy[nx*(j-1)+(i-1)]+hy[nx*(j-1)+i]+
+		    hy[nx*j+(i-1)]+hy[nx*j+i]);
+	  roc=0.25*(ro[nx*(j-1)+(i-1)]+ro[nx*(j-1)+i]+
+		    ro[nx*j+(i-1)]+ro[nx*j+i]);
+	  roc=1.0/roc;
+	  bxc=0.5*(bx[nx*(j-1)+i]+bx[nx*j+i]);
+	  byc=0.5*(by[nx*j+(i-1)]+by[nx*j+i]);
+	  vxc=fabs(vxc)+fabs(bxc*roc)*vphix;
+	  vyc=fabs(vyc)+fabs(byc*roc)*vphiy;
+
+	  ctx[nx*j+i]=(vxc+0.5*eps)/(vxc+vyc+eps);
+	}
+      }
+#endif
+
+      /* 2nd derivative in X for hyper diffusion */
+#if (HDF)
+#ifdef _OPENMP
+#pragma omp for
+#endif
+      for (j=0;j<ny;j++){
+	int sm2,sm,sp,sp2;
+#pragma simd
+	for (i=2;i<nx-2;i++){
+	  ss=nx*j+i;
+	  sm2=nx*j+(i-2);
+	  sm=nx*j+(i-1);
+	  sp=nx*j+(i+1);
+	  sp2=nx*j+(i+2);
+	  double val[3][5]={{cy[sm2],cy[sm],cy[ss],cy[sp],cy[sp2]},
+	  		    {bz[sm2],bz[sm],bz[ss],bz[sp],bz[sp2]},
+	  		    {b2[sm2],b2[sm],b2[ss],b2[sp],b2[sp2]}};
+
+	  d2u[0*nxy+ss]=func_d2fc(&val[0][0]); /* by */
+	  d2u[1*nxy+ss]=func_d2fc(&val[1][0]); /* bz */
+	  d2u[2*nxy+ss]=func_d2fc(&val[2][0]); /* en */
+	}
+      }
+#ifdef _OPENMP
+#pragma omp single
+#endif
+      {
+	p[0]=&d2u[0*nxy];
+	p[1]=&d2u[1*nxy];
+	p[2]=&d2u[2*nxy];
+	mpi_sdrv2d(p,3,nx,ny,xoff,yoff,mpi_rank,mpi_numx,mpi_numy);
+	mpi_xbc2d(p[0],nx,ny,xoff,yoff,0,+0,mpi_rank,mpi_numx,mpi_numy);
+	mpi_xbc2d(p[1],nx,ny,xoff,yoff,0,+0,mpi_rank,mpi_numx,mpi_numy);
+	mpi_xbc2d(p[2],nx,ny,xoff,yoff,0,+0,mpi_rank,mpi_numx,mpi_numy);
+	mpi_ybc2d(p[0],nx,ny,xoff,yoff,0,-1,mpi_rank,mpi_numx,mpi_numy);
+	mpi_ybc2d(p[1],nx,ny,xoff,yoff,0,+1,mpi_rank,mpi_numx,mpi_numy);
+	mpi_ybc2d(p[2],nx,ny,xoff,yoff,0,+1,mpi_rank,mpi_numx,mpi_numy);
+      }
+#endif
+
+      /* Variables at cell face along X */
+#ifdef _OPENMP
+#pragma omp for
+#endif
+      for (j=0;j<ny;j++){
+	int sl,sr;
+	int sm2,sm,sp,sp2;
+#pragma simd
+	for (i=2;i<nx-2;i++){
+	  ss=nx*j+i;
+	  sl=nx*j+(i+1);
+	  sr=nx*j+i;
+	  sm2=nx*j+(i-2);
+	  sm=nx*j+(i-1);
+	  sp=nx*j+(i+1);
+	  sp2=nx*j+(i+2);
+	  /* Variables in the stencil */
+	  double ros[]={ro[sm2],ro[sm],ro[ss],ro[sp],ro[sp2]};
+	  double hxs[]={hx[sm2],hx[sm],hx[ss],hx[sp],hx[sp2]};
+	  double hys[]={hy[sm2],hy[sm],hy[ss],hy[sp],hy[sp2]};
+	  double hzs[]={hz[sm2],hz[sm],hz[ss],hz[sp],hz[sp2]};
+	  double bxs[]={cx[sm2],cx[sm],cx[ss],cx[sp],cx[sp2]};
+	  double bys[]={cy[sm2],cy[sm],cy[ss],cy[sp],cy[sp2]};
+	  double bzs[]={bz[sm2],bz[sm],bz[ss],bz[sp],bz[sp2]};
+	  double ens[]={en[sm2],en[sm],en[ss],en[sp],en[sp2]};
+
+	  double vl[7],vr[7];
+	  func_lr(ros,&vl[0],&vr[0]);
+	  func_lr(hxs,&vl[1],&vr[1]);
+	  func_lr(hys,&vl[2],&vr[2]);
+	  func_lr(hzs,&vl[3],&vr[3]);
+	  func_lr(bys,&vl[4],&vr[4]);
+	  func_lr(bzs,&vl[5],&vr[5]);
+	  func_lr(ens,&vl[6],&vr[6]);
+	  
+	  /* Left-face @ i+1/2 */
+	  ul[8*sl+0]=vl[0];	/* ro */
+	  ul[8*sl+1]=vl[1];	/* hx */
+	  ul[8*sl+2]=vl[2];	/* hy */
+	  ul[8*sl+3]=vl[3];	/* hz */
+	  ul[8*sl+4]=bx[sl];	/* bx */
+	  ul[8*sl+5]=vl[4];	/* by */
+	  ul[8*sl+6]=vl[5];	/* bz */
+	  ul[8*sl+7]=vl[6];	/* en */
+	  /* Right-face @ i-1/2 */
+	  ur[8*sr+0]=vr[0];	/* ro */
+	  ur[8*sr+1]=vr[1];	/* hx */
+	  ur[8*sr+2]=vr[2];	/* hy */
+	  ur[8*sr+3]=vr[3];	/* hz */
+	  ur[8*sr+4]=bx[sr];	/* bx */
+	  ur[8*sr+5]=vr[4];	/* by */
+	  ur[8*sr+6]=vr[5];	/* bz */
+	  ur[8*sr+7]=vr[6];	/* en */
+
+	  /* Linear interpolation of numerical flux of By */
+	  double val[]={cy[sm2]*hx[sm2],cy[sm]*hx[sm],cy[ss]*hx[ss],cy[sp]*hx[sp],cy[sp2]*hx[sp2]};
+	  lfun_lr(val,&vl[0],&vr[0]);
+	  lfun_lr(hys,&vl[1],&vr[1]);
+	  ql[sl]=vl[0]-bx[sl]*vl[1];
+	  qr[sr]=vr[0]-bx[sr]*vr[1];
+
+#if (HDF)
+	  /* Interpolation for hyper diffusion */
+	  double d2us[3][5]={{d2u[0*nxy+sm2],d2u[0*nxy+sm],d2u[0*nxy+ss],d2u[0*nxy+sp],d2u[0*nxy+sp2]},
+			     {d2u[1*nxy+sm2],d2u[1*nxy+sm],d2u[1*nxy+ss],d2u[1*nxy+sp],d2u[1*nxy+sp2]},
+			     {d2u[2*nxy+sm2],d2u[2*nxy+sm],d2u[2*nxy+ss],d2u[2*nxy+sp],d2u[2*nxy+sp2]}};
+	  func_lr(&d2us[0][0],&vl[0],&vr[0]);
+	  func_lr(&d2us[1][0],&vl[1],&vr[1]);
+	  func_lr(&d2us[2][0],&vl[2],&vr[2]);
+	  d2ul[3*sl+0]=vl[0];	/* by */
+	  d2ul[3*sl+1]=vl[1];	/* bz */
+	  d2ul[3*sl+2]=vl[2];	/* en */
+	  d2ur[3*sr+0]=vr[0];	/* by */
+	  d2ur[3*sr+1]=vr[1];	/* bz */
+	  d2ur[3*sr+2]=vr[2];	/* en */
+#endif
+	}
+      }
+      /* Numerical flux at cell face along X */
+#ifdef _OPENMP
+#pragma omp for
+#endif
+      for (j=0;j<ny;j++){
+#pragma simd
+	for (i=3;i<nx-2;i++){
+	  double bn,smax=0,flux[4];
+	  ss=nx*j+i;
+	  bn=0.5*(ul[8*ss+4]+ur[8*ss+4]);
+	  smax+=max(fabs(ul[8*ss+1]),fabs(ur[8*ss+1])); /* Hall velocity */
+	  smax+=vphix*fabs(bn/(0.5*(ul[8*ss+0]+ur[8*ss+0]))); /* Whistler velocity */
+	  hall_flux_lf(ul[8*ss+0],ul[8*ss+1],ul[8*ss+2],ul[8*ss+3],ul[8*ss+5],ul[8*ss+6],ul[8*ss+7],
+		       ur[8*ss+0],ur[8*ss+1],ur[8*ss+2],ur[8*ss+3],ur[8*ss+5],ur[8*ss+6],ur[8*ss+7],
+		       bn,smax,
+		       &flux[1],&flux[2],&flux[3]);
+	  fx[4*ss+0]=0;		/* bx */
+	  fx[4*ss+1]=flux[1];	/* by */
+	  fx[4*ss+2]=flux[2];	/* bz */
+	  fx[4*ss+3]=flux[3];	/* en */
+
+#if (HDF)
+	  /* Hyper diffusion term */
+	  fx[4*ss+1]+=0.125*alpha*smax*(d2ur[3*ss+0]-d2ul[3*ss+0]);
+	  fx[4*ss+2]+=0.125*alpha*smax*(d2ur[3*ss+1]-d2ul[3*ss+1]);
+	  fx[4*ss+3]+=0.125*alpha*smax*(d2ur[3*ss+2]-d2ul[3*ss+2]);
+#endif
+	  
+	  /* Divide central and upwind parts in numerical flux of By */
+	  fc[ss]=0.5*(ql[ss]+qr[ss]); /* Central part */
+	  fx[4*ss+1]-=fc[ss];	      /* Upwind part */
+	}
+      }
+      /* Numerical flux of By at cell corner along Y */
+#ifdef _OPENMP
+#pragma omp for
+#endif
+      for (j=2;j<ny-2;j++){
+	int sl,sr;
+	int sm2,sm,sp,sp2;
+#pragma simd
+	for (i=3;i<nx-2;i++){
+	  ss=nx*j+i;
+	  sl=nx*(j+1)+i;
+	  sr=nx*j+i;
+	  sm2=nx*(j-2)+i;
+	  sm=nx*(j-1)+i;
+	  sp=nx*(j+1)+i;
+	  sp2=nx*(j+2)+i;
+	  double val[]={fx[4*sm2+1],fx[4*sm+1],fx[4*ss+1],fx[4*sp+1],fx[4*sp2+1]};
+	  double vac[]={fc[sm2],fc[sm],fc[ss],fc[sp],fc[sp2]};
+
+	  double vl[2],vr[2];
+	  lfun_lr(val,&vl[0],&vr[0]); /* Upwind part */
+	  lfun_lr(vac,&vl[1],&vr[1]); /* Central part */
+	  ul[2*sl+0]=vl[0];
+	  ur[2*sr+0]=vr[0];
+	  ul[2*sl+1]=vl[1];
+	  ur[2*sr+1]=vr[1];
+	}
+      }
+      /* E-field at cell corner along Y */
+#ifdef _OPENMP
+#pragma omp for
+#endif
+      for (j=3;j<ny-2;j++){
+#pragma simd
+	for (i=3;i<nx-2;i++){
+	  ss=nx*j+i;
+	  ez[ss]+=-0.5*((ul[2*ss+0]+ur[2*ss+0])+(1.0-ctx[ss])*(ul[2*ss+1]+ur[2*ss+1]));
+	}
+      }
+
+      /* 2nd derivative in Y for hyper diffusion */
+#if (HDF)
+#ifdef _OPENMP
+#pragma omp for
+#endif
+      for (j=2;j<ny-2;j++){
+	int sm2,sm,sp,sp2;
+#pragma simd
+	for (i=0;i<nx;i++){
+	  ss=nx*j+i;
+	  sm2=nx*(j-2)+i;
+	  sm=nx*(j-1)+i;
+	  sp=nx*(j+1)+i;
+	  sp2=nx*(j+2)+i;
+	  double val[3][5]={{bz[sm2],bz[sm],bz[ss],bz[sp],bz[sp2]},
+	  		    {cx[sm2],cx[sm],cx[ss],cx[sp],cx[sp2]},
+	  		    {b2[sm2],b2[sm],b2[ss],b2[sp],b2[sp2]}};
+	  
+	  d2u[0*nxy+ss]=func_d2fc(&val[0][0]); /* bz */
+	  d2u[1*nxy+ss]=func_d2fc(&val[1][0]); /* bx */
+	  d2u[2*nxy+ss]=func_d2fc(&val[2][0]); /* en */
+	}
+      }
+#ifdef _OPENMP
+#pragma omp single
+#endif
+      {
+	p[0]=&d2u[0*nxy];
+	p[1]=&d2u[1*nxy];
+	p[2]=&d2u[2*nxy];
+	mpi_sdrv2d(p,3,nx,ny,xoff,yoff,mpi_rank,mpi_numx,mpi_numy);
+	mpi_xbc2d(p[0],nx,ny,xoff,yoff,0,+0,mpi_rank,mpi_numx,mpi_numy);
+	mpi_xbc2d(p[1],nx,ny,xoff,yoff,0,+0,mpi_rank,mpi_numx,mpi_numy);
+	mpi_xbc2d(p[2],nx,ny,xoff,yoff,0,+0,mpi_rank,mpi_numx,mpi_numy);
+	mpi_ybc2d(p[0],nx,ny,xoff,yoff,0,+1,mpi_rank,mpi_numx,mpi_numy);
+	mpi_ybc2d(p[1],nx,ny,xoff,yoff,0,+1,mpi_rank,mpi_numx,mpi_numy);
+	mpi_ybc2d(p[2],nx,ny,xoff,yoff,0,+1,mpi_rank,mpi_numx,mpi_numy);
+      }
+#endif
+      
+      /* Variables at cell face along Y */
+#ifdef _OPENMP
+#pragma omp for
+#endif
+      for (j=2;j<ny-2;j++){
+	int sl,sr;
+	int sm2,sm,sp,sp2;
+#pragma simd
+	for (i=0;i<nx;i++){
+	  ss=nx*j+i;
+	  sl=nx*(j+1)+i;
+	  sr=nx*j+i;
+	  sm2=nx*(j-2)+i;
+	  sm=nx*(j-1)+i;
+	  sp=nx*(j+1)+i;
+	  sp2=nx*(j+2)+i;
+	  /* Variables in the stencil */
+	  double ros[]={ro[sm2],ro[sm],ro[ss],ro[sp],ro[sp2]};
+	  double hxs[]={hx[sm2],hx[sm],hx[ss],hx[sp],hx[sp2]};
+	  double hys[]={hy[sm2],hy[sm],hy[ss],hy[sp],hy[sp2]};
+	  double hzs[]={hz[sm2],hz[sm],hz[ss],hz[sp],hz[sp2]};
+	  double bxs[]={cx[sm2],cx[sm],cx[ss],cx[sp],cx[sp2]};
+	  double bys[]={cy[sm2],cy[sm],cy[ss],cy[sp],cy[sp2]};
+	  double bzs[]={bz[sm2],bz[sm],bz[ss],bz[sp],bz[sp2]};
+	  double ens[]={en[sm2],en[sm],en[ss],en[sp],en[sp2]};
+
+	  double vl[7],vr[7];
+	  func_lr(ros,&vl[0],&vr[0]);
+	  func_lr(hys,&vl[1],&vr[1]);
+	  func_lr(hzs,&vl[2],&vr[2]);
+	  func_lr(hxs,&vl[3],&vr[3]);	  
+	  func_lr(bzs,&vl[4],&vr[4]);
+	  func_lr(bxs,&vl[5],&vr[5]);	  
+	  func_lr(ens,&vl[6],&vr[6]);
+
+	  /* Left-face @ j+1/2 */
+	  ul[8*sl+0]=vl[0];	/* ro */
+	  ul[8*sl+1]=vl[1];	/* hy */
+	  ul[8*sl+2]=vl[2];	/* hz */
+	  ul[8*sl+3]=vl[3];	/* hx */
+	  ul[8*sl+4]=by[sl];	/* by */
+	  ul[8*sl+5]=vl[4];	/* bz */
+	  ul[8*sl+6]=vl[5];	/* bx */
+	  ul[8*sl+7]=vl[6];	/* en */
+	  /* Right-face @ j-1/2 */
+	  ur[8*sr+0]=vr[0];	/* ro */
+	  ur[8*sr+1]=vr[1];	/* hy */
+	  ur[8*sr+2]=vr[2];	/* hz */
+	  ur[8*sr+3]=vr[3];	/* hx */
+	  ur[8*sr+4]=by[sr];	/* by */
+	  ur[8*sr+5]=vr[4];	/* bz */
+	  ur[8*sr+6]=vr[5];	/* bx */
+	  ur[8*sr+7]=vr[6];	/* en */
+
+	  /* Linear interpolation of numerical flux of Bx */
+	  double val[]={cx[sm2]*hy[sm2],cx[sm]*hy[sm],cx[ss]*hy[ss],cx[sp]*hy[sp],cx[sp2]*hy[sp2]};
+	  lfun_lr(val,&vl[0],&vr[0]);
+	  lfun_lr(hxs,&vl[1],&vr[1]);
+	  ql[sl]=vl[0]-by[sl]*vl[1];
+	  qr[sr]=vr[0]-by[sr]*vr[1];
+
+#if (HDF)
+	  /* Interpolation for hyper diffusion */
+	  double d2us[3][5]={{d2u[0*nxy+sm2],d2u[0*nxy+sm],d2u[0*nxy+ss],d2u[0*nxy+sp],d2u[0*nxy+sp2]},
+			     {d2u[1*nxy+sm2],d2u[1*nxy+sm],d2u[1*nxy+ss],d2u[1*nxy+sp],d2u[1*nxy+sp2]},
+			     {d2u[2*nxy+sm2],d2u[2*nxy+sm],d2u[2*nxy+ss],d2u[2*nxy+sp],d2u[2*nxy+sp2]}};
+	  func_lr(&d2us[0][0],&vl[0],&vr[0]);
+	  func_lr(&d2us[1][0],&vl[1],&vr[1]);
+	  func_lr(&d2us[2][0],&vl[2],&vr[2]);
+	  d2ul[3*sl+0]=vl[0];	/* bz */
+	  d2ul[3*sl+1]=vl[1];	/* bx */
+	  d2ul[3*sl+2]=vl[2];	/* en */
+	  d2ur[3*sr+0]=vr[0];	/* bz */
+	  d2ur[3*sr+1]=vr[1];	/* bx */
+	  d2ur[3*sr+2]=vr[2];	/* en */
+#endif
+	}
+      }
+      /* Numerical flux at cell face along Y */
+#ifdef _OPENMP
+#pragma omp for
+#endif
+      for (j=3;j<ny-2;j++){
+#pragma simd
+	for (i=0;i<nx;i++){
+	  double bn,smax=0,flux[4];
+	  ss=nx*j+i;
+	  bn=0.5*(ul[8*ss+4]+ur[8*ss+4]);
+	  smax+=max(fabs(ul[8*ss+1]),fabs(ur[8*ss+1])); /* Hall velocity */
+	  smax+=vphiy*fabs(bn/(0.5*(ul[8*ss+0]+ur[8*ss+0]))); /* Whistler velocity */
+	  hall_flux_lf(ul[8*ss+0],ul[8*ss+1],ul[8*ss+2],ul[8*ss+3],ul[8*ss+5],ul[8*ss+6],ul[8*ss+7],
+		       ur[8*ss+0],ur[8*ss+1],ur[8*ss+2],ur[8*ss+3],ur[8*ss+5],ur[8*ss+6],ur[8*ss+7],
+		       bn,smax,
+		       &flux[1],&flux[2],&flux[3]);
+	  fy[4*ss+1]=0;		/* by */
+	  fy[4*ss+2]=flux[1];	/* bz */
+	  fy[4*ss+0]=flux[2];	/* bx */
+	  fy[4*ss+3]=flux[3];	/* en */
+
+#if (HDF)
+	  /* Hyper diffusion term */
+	  fy[4*ss+2]+=0.125*alpha*smax*(d2ur[3*ss+0]-d2ul[3*ss+0]);
+	  fy[4*ss+0]+=0.125*alpha*smax*(d2ur[3*ss+1]-d2ul[3*ss+1]);
+	  fy[4*ss+3]+=0.125*alpha*smax*(d2ur[3*ss+2]-d2ul[3*ss+2]);
+#endif
+
+	  /* Divide central and upwind parts in numerical flux of Bx */
+	  fc[ss]=0.5*(ql[ss]+qr[ss]); /* Central part */
+	  fy[4*ss+0]-=fc[ss];	      /* Upwind part */
+	}
+      }
+      /* Numerical flux of Bx at cell corner along X */
+#ifdef _OPENMP
+#pragma omp for
+#endif
+      for (j=3;j<ny-2;j++){
+	int sl,sr;
+	int sm2,sm,sp,sp2;
+#pragma simd
+	for (i=2;i<nx-2;i++){
+	  ss=nx*j+i;
+	  sl=nx*j+(i+1);
+	  sr=nx*j+i;
+	  sm2=nx*j+(i-2);
+	  sm=nx*j+(i-1);
+	  sp=nx*j+(i+1);
+	  sp2=nx*j+(i+2);
+	  double val[]={fy[4*sm2+0],fy[4*sm+0],fy[4*ss+0],fy[4*sp+0],fy[4*sp2+0]};
+	  double vac[]={fc[sm2],fc[sm],fc[ss],fc[sp],fc[sp2]};
+
+	  double vl[2],vr[2];
+	  lfun_lr(val,&vl[0],&vr[0]); /* Upwind part */
+	  lfun_lr(vac,&vl[1],&vr[1]); /* Central part */
+	  ul[2*sl+0]=vl[0];
+	  ur[2*sr+0]=vr[0];
+	  ul[2*sl+1]=vl[1];
+	  ur[2*sr+1]=vr[1];
+	}
+      }
+      /* E-field at cell corner along X */
+#ifdef _OPENMP
+#pragma omp for
+#endif
+      for (j=3;j<ny-2;j++){
+#pragma simd
+	for (i=3;i<nx-2;i++){
+	  ss=nx*j+i;
+	  ez[ss]+=+0.5*((ul[2*ss+0]+ur[2*ss+0])+ctx[ss]*(ul[2*ss+1]+ur[2*ss+1]));
+	}
+      }
+
+      /* Update variable at cell center */
+#ifdef _OPENMP
+#pragma omp for nowait
+#endif
+      for (j=yoff;j<ny-yoff;j++){
+	int sip,sjp,si0,sj0;
+	int sim,sip2,sjm,sjp2;
+#pragma simd
+	for (i=xoff;i<nx-xoff;i++){
+	  ss=nx*j+i;
+	  sip=nx*j+(i+1);
+	  sjp=nx*(j+1)+i;
+	  si0=nx*j+i;
+	  sj0=nx*j+i;
+	  sim=nx*j+(i-1);
+	  sjm=nx*(j-1)+i;
+	  sip2=nx*j+(i+2);
+	  sjp2=nx*(j+2)+i;
+	  double du[2][4];
+	  /* dF/dx */
+	  double valx[4][4]={{fx[4*sim+0],fx[4*si0+0],fx[4*sip+0],fx[4*sip2+0]},
+			     {fx[4*sim+1],fx[4*si0+1],fx[4*sip+1],fx[4*sip2+1]},
+			     {fx[4*sim+2],fx[4*si0+2],fx[4*sip+2],fx[4*sip2+2]},
+			     {fx[4*sim+3],fx[4*si0+3],fx[4*sip+3],fx[4*sip2+3]}};
+	  du[0][2]=func_df(&valx[2][0]);
+	  du[0][3]=func_df(&valx[3][0]);
+	  /* dG/dy */
+	  double valy[4][4]={{fy[4*sjm+0],fy[4*sj0+0],fy[4*sjp+0],fy[4*sjp2+0]},
+			     {fy[4*sjm+1],fy[4*sj0+1],fy[4*sjp+1],fy[4*sjp2+1]},
+			     {fy[4*sjm+2],fy[4*sj0+2],fy[4*sjp+2],fy[4*sjp2+2]},
+			     {fy[4*sjm+3],fy[4*sj0+3],fy[4*sjp+3],fy[4*sjp2+3]}};
+	  du[1][2]=func_df(&valy[2][0]);
+	  du[1][3]=func_df(&valy[3][0]);
+
+	  bz[ss]=rk_fac[rk][0]*ut[4*ss+2]+rk_fac[rk][1]*(bz[ss]-dtdx*du[0][2]-dtdy*du[1][2]);
+	  en[ss]=rk_fac[rk][0]*ut[4*ss+3]+rk_fac[rk][1]*(en[ss]-dtdx*du[0][3]-dtdy*du[1][3]);
+	}
+      }
+      /* Update CT Bx */
+#ifdef _OPENMP
+#pragma omp for nowait
+#endif
+      for (j=yoff;j<ny-yoff;j++){
+	int sp,s0;
+	int sm,sp2;
+	double du;
+#pragma simd
+	for (i=xoff;i<nx-xoff+1;i++){
+	  ss=nx*j+i;
+	  sp=nx*(j+1)+i;
+	  s0=nx*j+i;
+	  sm=nx*(j-1)+i;
+	  sp2=nx*(j+2)+i;
+	  double val[]={ez[sm],ez[s0],ez[sp],ez[sp2]};
+	  du=func_df(val);
+	  bx[ss]=rk_fac[rk][0]*ut[4*ss+0]+rk_fac[rk][1]*(bx[ss]-dtdy*du);
+	}
+      }
+      /* Update CT By */
+#ifdef _OPENMP
+#pragma omp for
+#endif
+      for (j=yoff;j<ny-yoff+1;j++){
+	int sp,s0;
+	int sm,sp2;
+	double du;
+#pragma simd
+	for (i=xoff;i<nx-xoff;i++){
+	  ss=nx*j+i;
+	  sp=nx*j+(i+1);
+	  s0=nx*j+i;
+	  sm=nx*j+(i-1);
+	  sp2=nx*j+(i+2);
+	  double val[]={ez[sm],ez[s0],ez[sp],ez[sp2]};
+	  du=func_df(val);
+	  by[ss]=rk_fac[rk][0]*ut[4*ss+1]+rk_fac[rk][1]*(by[ss]+dtdx*du);
+	}
+      }
+
+    } /* OpenMP */
+    p[0]=en;
+    p[1]=bx;
+    p[2]=by;
+    p[3]=bz;
+    mpi_sdrv2d(p,4,nx,ny,xoff,yoff,mpi_rank,mpi_numx,mpi_numy);
+    mpi_xbc2d(&en[0],nx,ny,xoff,yoff,0,+0,mpi_rank,mpi_numx,mpi_numy);
+    mpi_xbc2d(&bx[0],nx,ny,xoff,yoff,1,+0,mpi_rank,mpi_numx,mpi_numy);
+    mpi_xbc2d(&by[0],nx,ny,xoff,yoff,0,+0,mpi_rank,mpi_numx,mpi_numy);
+    mpi_xbc2d(&bz[0],nx,ny,xoff,yoff,0,+0,mpi_rank,mpi_numx,mpi_numy);
+    mpi_ybc2d(&en[0],nx,ny,xoff,yoff,0,+1,mpi_rank,mpi_numx,mpi_numy);
+    mpi_ybc2d(&bx[0],nx,ny,xoff,yoff,0,+1,mpi_rank,mpi_numx,mpi_numy);
+    mpi_ybc2d(&by[0],nx,ny,xoff,yoff,1,-1,mpi_rank,mpi_numx,mpi_numy);
+    mpi_ybc2d(&bz[0],nx,ny,xoff,yoff,0,+1,mpi_rank,mpi_numx,mpi_numy);
+  }
+
+  free(ut);
+  free(ul);
+  free(ur);
+  free(ql);
+  free(qr);
+  free(fx);
+  free(fy);
+  free(cx);
+  free(cy);
+  free(ez);
+  free(ctx);
+  free(fc);
+  free(hx);
+  free(hy);
+  free(hz);
+  free(b2);
+  free(d2u);
+  free(d2ul);
+  free(d2ur);
 }
