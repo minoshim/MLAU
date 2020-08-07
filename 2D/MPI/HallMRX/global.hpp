@@ -37,7 +37,7 @@ namespace global
   const double dtrec=1.0; 	// Time step for output
   double trec=dtrec;
 
-  const double lx=128.0;         // Spatial domain in X
+  const double lx=256.0;         // Spatial domain in X
   const double ly=lx*(double)YMESH/XMESH;// Spatial domain in Y
   const double xmin=-0.5*lx;		 // Minimum of x
   const double ymin=-0.5*ly;		 // Minimum of y
