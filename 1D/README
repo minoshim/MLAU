@@ -47,6 +47,13 @@
   XOFF            INT       =        4
   ...  
 
+-- Python3 script is also found as batch.py to handle and draw simulation data.
+   Packages Numpy and Matplotlib are required.
+   Call the script in command line:
+   > python batch.py
+   Call the script in Python3 interactive mode:
+   >>> exec(open("batch.py").read())
+
 -----------------------------------------------------
 Copyright 2020 Takashi Minoshima
 
