@@ -58,6 +58,7 @@ data2=np.array([ro,vx,vy,vz,pr,bx,by,bz])
 #Plot
 val=pr/ro
 fig=plt.figure()
+plt.axes().set_aspect("equal")
 plt.pcolormesh(x,y,val,cmap="jet")
 plt.xlabel("x")
 plt.ylabel("y")
