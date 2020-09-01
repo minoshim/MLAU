@@ -51,6 +51,11 @@ vy=data2[2,:,:]/ro
 vz=data2[3,:,:]/ro
 bx=data2[5,:,:]
 by=data2[6,:,:]
+# Cell-face to cell-center B
+for i in range(0,nx-2*xoff):
+    bx[i,:]=0.5*(data[5,i+xoff,yoff:ny-yoff]+data[5,i+1+xoff,yoff:ny-yoff])
+for j in range(0,ny-2*yoff):
+    by[:,j]=0.5*(data[6,xoff:nx-xoff,j+yoff]+data[6,xoff:nx-xoff,j+1+yoff])
 bz=data2[7,:,:]
 pr=(gam-1)*(data2[4,:,:]-0.5*(ro*(vx**2+vy**2+vz**2)+(bx**2+by**2+bz**2)))
 data2=np.array([ro,vx,vy,vz,pr,bx,by,bz])
