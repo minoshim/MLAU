@@ -10,15 +10,16 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 #Read independent variables and parameters
-direc=input("Input data directory: ")+"/"
-try:
-    x=np.loadtxt(direc+"x.dat",dtype=np.float)
-    t=np.loadtxt(direc+"t.dat",dtype=np.float)
-    xoff=int(np.loadtxt(direc+"xoff.dat",dtype=np.int))
-    para=np.loadtxt(direc+"params.dat",dtype=np.float)
-except:
-    print("Error during file load.")
-    exit()
+while True:
+    direc=input("Input data directory (Ctrl-D to exit): ")+"/"
+    try:
+        x=np.loadtxt(direc+"x.dat",dtype=np.float)
+        t=np.loadtxt(direc+"t.dat",dtype=np.float)
+        xoff=int(np.loadtxt(direc+"xoff.dat",dtype=np.int))
+        para=np.loadtxt(direc+"params.dat",dtype=np.float)
+        break
+    except:
+        print("Error during file load.")
     
 bx0=para[0]
 gam=para[1]
