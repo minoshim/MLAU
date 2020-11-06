@@ -14,7 +14,7 @@ int main(void)
 {
   int n=0,cnt=0;
   double tim=0;
-  time_t stim,etim;
+  clock_t stim,etim;
 
   new_vals();
   init_grid();
@@ -26,7 +26,7 @@ int main(void)
 #endif
   cflcomment(dr,dt);
   
-  time(&stim);
+  stim=clock();
   while(n++ < nmax){
     tim+=dt;
 
@@ -45,8 +45,8 @@ int main(void)
       dataio(n,cnt,tim);
     }
   }
-  time(&etim);
-  printf("%lu sec is required for computation.\n",etim-stim);
+  etim=clock();
+  printf("%f sec is required for computation.\n",(double)(etim-stim)/CLOCKS_PER_SEC);
 
   delete_vals();
   return 0;
