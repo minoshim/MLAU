@@ -581,6 +581,143 @@ inline void calc_flux_hlld(double rol, double vnl, double vtl, double vul, doubl
   *fen=(enu+ptc)*vnc-bnc*(vtu*btu+vuu*buu);
 }
 
+inline void calc_flux_hl3d2(double rol, double vnl, double vtl, double vul, double btl, double bul, double prl,
+			    double ror, double vnr, double vtr, double vur, double btr, double bur, double prr,
+			    double bnc, double gamma, double *dv,
+			    double *fro, double *fmn, double *fmt, double *fmu, double *fbt, double *fbu, double *fen)
+/* Calculate HLL-Low-Dissipation-D fluxes (quasi-all-speed extension) */
+/* rol,vnl,vtl,vul,btl,bul,prl: input primitive variables at the left side */
+/* ror,vnr,vtr,vur,btr,bur,prr: input primitive variables at the right side */
+/* bnc: input normal magnetic field at the interface */
+/* gamma: specific heat ratio */
+/* fro,fmn,fmt,fmu,fbt,fbu,fen: output HLLD fluxes at the interface*/
+
+/* Shock detection using dv */
+{
+  double gammam1i=1.0/(gamma-1.0);
+  /* Bn at the interface */
+  double bnc2=bnc*bnc;
+  double sgn=(bnc > 0)?(1.0):(-1.0);
+  /* Variables at the left-face */
+  double roli=1.0/rol;
+  double vl2=vnl*vnl+vtl*vtl+vul*vul;
+  double pml=0.5*(btl*btl+bul*bul);
+  double ptl=prl+pml;
+  double enl=gammam1i*prl+pml+0.5*rol*vl2;
+  double vbl=vtl*btl+vul*bul;
+  /* Variables at the right-face */
+  double rori=1.0/ror;
+  double vr2=vnr*vnr+vtr*vtr+vur*vur;
+  double pmr=0.5*(btr*btr+bur*bur);
+  double ptr=prr+pmr;
+  double enr=gammam1i*prr+pmr+0.5*ror*vr2;
+  double vbr=vtr*btr+vur*bur;
+  /* Maximum/minimum wave speeds */
+  double cl2=gamma*prl*roli;
+  double cr2=gamma*prr*rori;
+  double cal2=bnc2*roli;
+  double car2=bnc2*rori;
+  double cbl2=cl2+cal2+2.0*pml*roli;
+  double cbr2=cr2+car2+2.0*pmr*rori;
+  double cfl2=0.5*(cbl2+sqrt(fabs(cbl2*cbl2-4.0*cl2*cal2)));
+  double cfr2=0.5*(cbr2+sqrt(fabs(cbr2*cbr2-4.0*cr2*car2)));
+  cbl2=vl2+cal2+2.0*pml*roli; /* Sound vel => convective vel. */
+  cbr2=vr2+car2+2.0*pmr*rori; /* Sound vel => convective vel. */
+  double ccl2=0.5*(cbl2+sqrt(fabs(cbl2*cbl2-4.0*vl2*cal2))); /* Sound vel => convective vel. */
+  double ccr2=0.5*(cbr2+sqrt(fabs(cbr2*cbr2-4.0*vr2*car2))); /* Sound vel => convective vel. */
+  double cmax=sqrt(max(cfl2,cfr2));
+  double sl=min(0.0,min(vnl,vnr)-cmax);
+  double sr=max(0.0,max(vnl,vnr)+cmax);
+  /* HLL average of the normal velocity and the total pressure */
+  double slvl=sl-vnl;
+  double srvr=sr-vnr;
+  double rslvl=rol*slvl;
+  double rsrvr=ror*srvr;
+  double drsvi=1.0/(rsrvr-rslvl);
+  double theta=min(1.0,(cmax-min(dv[0],0.0))/(cmax-min(dv[1],0.0))); /* Shock detection */
+  theta*=theta;
+  theta*=theta;
+  double vnc=(rsrvr*vnr-rslvl*vnl-theta*(ptr-ptl))*drsvi;
+  double mcc=min(1.0,sqrt(max(ccl2,ccr2))/cmax);
+  double ptc=(rsrvr*ptl-rslvl*ptr
+	      +(mcc*(2.0-mcc))*rsrvr*rslvl*(vnr-vnl))*drsvi; /* Quasi-all-speed extension */
+  /* Variables of the outer sides in the Riemann fan */
+  double slvc=sl-vnc;
+  double srvc=sr-vnc;
+  double ro2l=rslvl/slvc;
+  double ro2r=rsrvr/srvc;
+  double rhdl=rslvl*slvc-bnc2;
+  double rhdr=rsrvr*srvc-bnc2;
+  double vt2l,vu2l,bt2l,bu2l;
+  double vt2r,vu2r,bt2r,bu2r;
+  if (fabs(rhdl) > EPS){
+    double rhdli=1.0/rhdl;
+    double rhnvl=(vnl-vnc)*bnc;
+    double rhnbl=rslvl*slvl-bnc2;
+    vt2l=vtl+rhnvl*rhdli*btl;
+    vu2l=vul+rhnvl*rhdli*bul;
+    bt2l=rhnbl*rhdli*btl;
+    bu2l=rhnbl*rhdli*bul;
+  } else{
+    vt2l=vtl;
+    vu2l=vul;
+    bt2l=btl;
+    bu2l=bul;
+  }
+  if (fabs(rhdr) > EPS){
+    double rhdri=1.0/rhdr;
+    double rhnvr=(vnr-vnc)*bnc;
+    double rhnbr=rsrvr*srvr-bnc2;
+    vt2r=vtr+rhnvr*rhdri*btr;
+    vu2r=vur+rhnvr*rhdri*bur;
+    bt2r=rhnbr*rhdri*btr;
+    bu2r=rhnbr*rhdri*bur;
+  } else{
+    vt2r=vtr;
+    vu2r=vur;
+    bt2r=btr;
+    bu2r=bur;
+  }
+  double vb2l=vt2l*bt2l+vu2l*bu2l;
+  double vb2r=vt2r*bt2r+vu2r*bu2r;
+  double en2l=(slvl*enl-ptl*vnl+ptc*vnc+bnc*(vbl-vb2l))/slvc;
+  double en2r=(srvr*enr-ptr*vnr+ptc*vnc+bnc*(vbr-vb2r))/srvc;
+  /* Variables of the inner sides in the Riemann fan */
+  double rro2l=sqrt(ro2l);
+  double rro2r=sqrt(ro2r);
+  double rro2i=1.0/(rro2r+rro2l);
+  double vt3m=(rro2r*vt2r+rro2l*vt2l+(bt2r-bt2l)*sgn)*rro2i;
+  double vu3m=(rro2r*vu2r+rro2l*vu2l+(bu2r-bu2l)*sgn)*rro2i;
+  double bt3m=(rro2l*bt2r+rro2r*bt2l+rro2r*rro2l*(vt2r-vt2l)*sgn)*rro2i;
+  double bu3m=(rro2l*bu2r+rro2r*bu2l+rro2r*rro2l*(vu2r-vu2l)*sgn)*rro2i;
+  double vb3m=vt3m*bt3m+vu3m*bu3m;
+  double en3l=en2l-rro2l*(vb2l-vb3m)*sgn;
+  double en3r=en2r+rro2r*(vb2r-vb3m)*sgn;
+  /* Variables at the interface */
+  double rou,vtu,vuu,btu,buu,enu;
+  double hl,hr,h2l,h3l,h2r,h3r;
+  hl=(vnc > 0)?(1.0):(0.0);
+  hr=1.0-hl;
+  h2l=(vnc-fabs(bnc)/rro2l > 0)?(1.0):(0.0);
+  h3l=(1.0-h2l)*hl;
+  h2r=(vnc+fabs(bnc)/rro2r > 0)?(0.0):(1.0);
+  h3r=(1.0-h2r)*hr;
+  rou=ro2l*hl+ro2r*hr;
+  vtu=vt2l*h2l+vt3m*(h3l+h3r)+vt2r*h2r;
+  vuu=vu2l*h2l+vu3m*(h3l+h3r)+vu2r*h2r;
+  btu=bt2l*h2l+bt3m*(h3l+h3r)+bt2r*h2r;
+  buu=bu2l*h2l+bu3m*(h3l+h3r)+bu2r*h2r;
+  enu=en2l*h2l+en3l*h3l+en3r*h3r+en2r*h2r;
+  /* HLLD fluxes */
+  *fro=rou*vnc;
+  *fmn=rou*vnc*vnc+ptc-bnc2*0.5;
+  *fmt=rou*vtu*vnc-bnc*btu;
+  *fmu=rou*vuu*vnc-bnc*buu;
+  *fbt=btu*vnc-bnc*vtu;
+  *fbu=buu*vnc-bnc*vuu;
+  *fen=(enu+ptc)*vnc-bnc*(vtu*btu+vuu*buu);
+}
+
 inline void hall_flux_lf(double rol, double vnl, double vtl, double vul, double btl, double bul, double enl,
 			 double ror, double vnr, double vtr, double vur, double btr, double bur, double enr,
 			 double bnc, double smax,
