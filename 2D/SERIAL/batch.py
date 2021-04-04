@@ -37,12 +37,12 @@ sst=-1
 while ((sst < 0) or (sst >= nt)):
     sst=int(input(f"Specity time period (0-{nt-1}): "))
     
-data=np.fromfile(direc+f"outdat_{sst:05d}.dat",dtype=np.float64).reshape((nd,nx,ny))
+data=np.fromfile(direc+f"outdat_{sst:05d}.dat",dtype=np.float64).reshape((nd,ny,nx))
 
 #Slice to remove ghost cells
 x=x[xoff:nx-xoff]
 y=y[yoff:ny-yoff]
-data2=data[:,xoff:nx-xoff,yoff:ny-yoff]
+data2=data[:,yoff:ny-yoff,xoff:nx-xoff]
 
 #Primitive variables
 ro=data2[0,:,:]
@@ -53,9 +53,9 @@ bx=data2[5,:,:]
 by=data2[6,:,:]
 # Cell-face to cell-center B
 for i in range(0,nx-2*xoff):
-    bx[i,:]=0.5*(data[5,i+xoff,yoff:ny-yoff]+data[5,i+1+xoff,yoff:ny-yoff])
+    bx[:,i]=0.5*(data[5,yoff:ny-yoff,i+xoff]+data[5,yoff:ny-yoff,i+1+xoff])
 for j in range(0,ny-2*yoff):
-    by[:,j]=0.5*(data[6,xoff:nx-xoff,j+yoff]+data[6,xoff:nx-xoff,j+1+yoff])
+    by[j,:]=0.5*(data[6,j+yoff,xoff:nx-xoff]+data[6,j+1+yoff,xoff:nx-xoff])
 bz=data2[7,:,:]
 pr=(gam-1)*(data2[4,:,:]-0.5*(ro*(vx**2+vy**2+vz**2)+(bx**2+by**2+bz**2)))
 data2=np.array([ro,vx,vy,vz,pr,bx,by,bz])
