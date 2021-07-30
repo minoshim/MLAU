@@ -581,11 +581,11 @@ inline void calc_flux_hlld(double rol, double vnl, double vtl, double vul, doubl
   *fen=(enu+ptc)*vnc-bnc*(vtu*btu+vuu*buu);
 }
 
-inline void calc_flux_hl3d2(double rol, double vnl, double vtl, double vul, double btl, double bul, double prl,
+inline void calc_flux_lhlld(double rol, double vnl, double vtl, double vul, double btl, double bul, double prl,
 			    double ror, double vnr, double vtr, double vur, double btr, double bur, double prr,
 			    double bnc, double gamma, double *dv,
 			    double *fro, double *fmn, double *fmt, double *fmu, double *fbt, double *fbu, double *fen)
-/* Calculate HLL-Low-Dissipation-D fluxes (quasi-all-speed extension) */
+/* Calculate low-dissipation HLLD fluxes (quasi-all-speed extension) */
 /* rol,vnl,vtl,vul,btl,bul,prl: input primitive variables at the left side */
 /* ror,vnr,vtr,vur,btr,bur,prr: input primitive variables at the right side */
 /* bnc: input normal magnetic field at the interface */
@@ -718,6 +718,19 @@ inline void calc_flux_hl3d2(double rol, double vnl, double vtl, double vul, doub
   *fen=(enu+ptc)*vnc-bnc*(vtu*btu+vuu*buu);
 }
 
+
+inline void calc_flux_hl3d2(double rol, double vnl, double vtl, double vul, double btl, double bul, double prl,
+			    double ror, double vnr, double vtr, double vur, double btr, double bur, double prr,
+			    double bnc, double gamma, double *dv,
+			    double *fro, double *fmn, double *fmt, double *fmu, double *fbt, double *fbu, double *fen)
+//Alias to LHLLD
+{
+  calc_flux_lhlld(rol,vnl,vtl,vul,btl,bul,prl,
+		  ror,vnr,vtr,vur,btr,bur,prr,
+		  bnc,gamma,dv,
+		  fro,fmn,fmt,fmu,fbt,fbu,fen);
+}
+
 inline void hall_flux_lf(double rol, double vnl, double vtl, double vul, double btl, double bul, double enl,
 			 double ror, double vnr, double vtr, double vur, double btr, double bur, double enr,
 			 double bnc, double smax,
@@ -748,5 +761,4 @@ inline void hall_flux_lf(double rol, double vnl, double vtl, double vul, double 
   *fbu=0.5*(fbul+fbur-smax*(bur-bul));
   *fen=0.5*(fenl+fenr-smax*(pmr-pml));
 }
-
 #endif
