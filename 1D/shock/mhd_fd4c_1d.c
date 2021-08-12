@@ -28,6 +28,7 @@
 void openbc1d_mhd(double *ro, double *mx, double *my, double *mz,
 		  double *en, double *by, double *bz,
 		  double bx,
+		  double dx, double dt,
 		  int nx, int xoff, double gamma,
 		  int istt, int iend);
 
@@ -80,9 +81,10 @@ void mhd_fd4c_1d(double *ro, double *mx, double *my, double *mz,
 		    double, double, double, double, double, double, double, 
 		    double, double, double*,
 		    double*, double*, double*, double*, double*, double*, double*);
-  func_flux=&calc_flux_mlau;
+  /* func_flux=&calc_flux_mlau; */
   /* func_flux=&calc_flux_hlld; */
   /* func_flux=&calc_flux_roe; */
+  func_flux=&calc_flux_lhlld;
 
   ut=(double*)malloc(sizeof(double)*7*nx);
   ul=(double*)malloc(sizeof(double)*7*nx);
@@ -204,6 +206,17 @@ void mhd_fd4c_1d(double *ro, double *mx, double *my, double *mz,
 	fx[7*ss+6]=flux[6];	/* en */
       }
 
+      /* Open boundary condition */
+      /* Set here to advect boundary data @ t=n to t=n+1 */
+      if (rk == 0){		/* Call only for 1st RK step to set BC @ t=n+1 */
+#ifdef _OPENMP
+#pragma omp single
+#endif
+	{
+	  openbc1d_mhd(ro,mx,my,mz,en,by,bz,bx,dx,dt,nx,xoff,gamma,0,1);
+	}
+      }
+
       /* Update */
 #ifdef _OPENMP
 #pragma omp for
@@ -244,7 +257,7 @@ void mhd_fd4c_1d(double *ro, double *mx, double *my, double *mz,
     } /* OpenMP */
 
     /* Boundary condition */
-    openbc1d_mhd(ro,mx,my,mz,en,by,bz,bx,nx,xoff,gamma,0,1);
+    /* openbc1d_mhd(ro,mx,my,mz,en,by,bz,bx,nx,xoff,gamma,0,1); */
   }
 
   free(ut);

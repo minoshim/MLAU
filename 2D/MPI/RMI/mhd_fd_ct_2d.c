@@ -120,9 +120,10 @@ void mhd_fd_ct_2d(double *ro, double *mx, double *my, double *mz,
 		    double, double, double, double, double, double, double,
 		    double, double, double*,
 		    double*, double*, double*, double*, double*, double*, double*);
-  func_flux=&calc_flux_mlau;
+  /* func_flux=&calc_flux_mlau; */
   /* func_flux=&calc_flux_hlld; */
   /* func_flux=&calc_flux_roe; */
+  func_flux=&calc_flux_lhlld;
   double *p[8];
   
   ut=(double*)malloc(sizeof(double)*8*nxy);

@@ -21,6 +21,7 @@
 void openbc1d_mhd(double *ro, double *mx, double *my, double *mz,
 		  double *en, double *by, double *bz,
 		  double bx,
+		  double dx, double dt,
 		  int nx, int xoff, double gamma,
 		  int istt, int iend)
 /* Open Boundary condition for MHD */
@@ -35,6 +36,7 @@ void openbc1d_mhd(double *ro, double *mx, double *my, double *mz,
   const int bpos[2]={xoff,nx-xoff-1}; /* Edge of simulation domain */
   const int dirc[2]={1,-1};	      /* 1 for Left, -1 for Right */
   const double bx2=bx*bx;
+  const double dtdx=dt/dx;
   
   for (i=istt;i<=iend;i++){		/* Left @ i=0, Right @ i=1 */
     int sgn,si,so,ss,j;
@@ -125,13 +127,21 @@ void openbc1d_mhd(double *ro, double *mx, double *my, double *mz,
       ss=so;
       /* Boundary condition for characteristic variables, considering the sign of eigenvalues */
       /* If variable is incoming, keep initial data, else copy inner data  */
-      w[0][1]=(sgn*al0 > 0)?w[0][1]:w[0][0];
-      w[1][1]=(sgn*al1 > 0)?w[1][1]:w[1][0];
-      w[2][1]=(sgn*al2 > 0)?w[2][1]:w[2][0];
-      w[3][1]=(sgn*al3 > 0)?w[3][1]:w[3][0];
-      w[4][1]=(sgn*al4 > 0)?w[4][1]:w[4][0];
-      w[5][1]=(sgn*al5 > 0)?w[5][1]:w[5][0];
-      w[6][1]=(sgn*al6 > 0)?w[6][1]:w[6][0];
+      /* w[0][1]=(sgn*al0 > 0)?w[0][1]:w[0][0]; */
+      /* w[1][1]=(sgn*al1 > 0)?w[1][1]:w[1][0]; */
+      /* w[2][1]=(sgn*al2 > 0)?w[2][1]:w[2][0]; */
+      /* w[3][1]=(sgn*al3 > 0)?w[3][1]:w[3][0]; */
+      /* w[4][1]=(sgn*al4 > 0)?w[4][1]:w[4][0]; */
+      /* w[5][1]=(sgn*al5 > 0)?w[5][1]:w[5][0]; */
+      /* w[6][1]=(sgn*al6 > 0)?w[6][1]:w[6][0]; */
+      /* If variable is incoming, keep outer data, else advect inner data  */
+      w[0][1]=(sgn*al0 > 0)?w[0][1]:(1+sgn*al0*dtdx)*w[0][1]-sgn*al0*dtdx*w[0][0];
+      w[1][1]=(sgn*al1 > 0)?w[1][1]:(1+sgn*al1*dtdx)*w[1][1]-sgn*al1*dtdx*w[1][0];
+      w[2][1]=(sgn*al2 > 0)?w[2][1]:(1+sgn*al2*dtdx)*w[2][1]-sgn*al2*dtdx*w[2][0];
+      w[3][1]=(sgn*al3 > 0)?w[3][1]:(1+sgn*al3*dtdx)*w[3][1]-sgn*al3*dtdx*w[3][0];
+      w[4][1]=(sgn*al4 > 0)?w[4][1]:(1+sgn*al4*dtdx)*w[4][1]-sgn*al4*dtdx*w[4][0];
+      w[5][1]=(sgn*al5 > 0)?w[5][1]:(1+sgn*al5*dtdx)*w[5][1]-sgn*al5*dtdx*w[5][0];
+      w[6][1]=(sgn*al6 > 0)?w[6][1]:(1+sgn*al6*dtdx)*w[6][1]-sgn*al6*dtdx*w[6][0];
       /* Primitive variables */
       ro[ss]=r0[0]*w[0][1]+r1[0]*w[1][1]+r2[0]*w[2][1]+r3[0]*w[3][1]+r4[0]*w[4][1]+r5[0]*w[5][1]+r6[0]*w[6][1];
       mx[ss]=r0[1]*w[0][1]+r1[1]*w[1][1]+r2[1]*w[2][1]+r3[1]*w[3][1]+r4[1]*w[4][1]+r5[1]*w[5][1]+r6[1]*w[6][1]; /* vx */

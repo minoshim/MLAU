@@ -76,9 +76,10 @@ void mhd_fd4c_1d(double *ro, double *mx, double *my, double *mz,
 		    double, double, double, double, double, double, double, 
 		    double, double, double*,
 		    double*, double*, double*, double*, double*, double*, double*);
-  func_flux=&calc_flux_mlau;
+  /* func_flux=&calc_flux_mlau; */
   /* func_flux=&calc_flux_hlld; */
   /* func_flux=&calc_flux_roe; */
+  func_flux=&calc_flux_lhlld;
 
   ut=(double*)malloc(sizeof(double)*7*nx);
   ul=(double*)malloc(sizeof(double)*7*nx);
