@@ -1,6 +1,7 @@
 MLAU - A Multistate Low-dissipation Advection Upstream Splitting Method for Ideal Magnetohydrodynamics
+LHLLD- A low-dissipation HLLD approximate Riemann solver for a very wide range of Mach numbers
 
-Copyright 2020 Takashi Minoshima
+Copyright 2020,2021 Takashi Minoshima
  
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by

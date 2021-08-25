@@ -13,7 +13,7 @@
 - Select a numerical scheme by editting mhd_fd_ct_2d.c
   Spatial order => ODR (1, 2, 3, or 4)
   Temporal order => R_K (1, 2, or 3)
-  Flux function => func_flux (MLAU, HLLD, or ROE)
+  Flux function => func_flux (MLAU, HLLD, LHLLD, or ROE)
 
 - Simulation data is handled through IDL (Interactive Data Language), with scripts found in idl/.
   IDL> .r rddt
@@ -58,13 +58,16 @@
    >>> exec(open("batch.py").read())
 
 -----------------------------------------------------
-Copyright 2020 Takashi Minoshima
+Copyright 2020,2021 Takashi Minoshima
 
 Github site:  https://github.com/minoshim/MLAU
 
-Journal site: https://iopscience.iop.org/article/10.3847/1538-4365/ab8aee
-
-arXiv site: http://arxiv.org/abs/2004.08012
+Journal sites:
+	https://iopscience.iop.org/article/10.3847/1538-4365/ab8aee (MLAU)
+	https://www.sciencedirect.com/science/article/pii/S0021999121005349 (LHLLD)
+arXiv sites:
+      http://arxiv.org/abs/2004.08012 (MLAU)
+      https://arxiv.org/abs/2108.04991 (LHLLD)
 
 Contact at Takashi Minoshima <minoshim@jamstec.go.jp>
 -----------------------------------------------------

@@ -3,4 +3,4 @@ In MLAU/include/:
    func.h contains some general functions.
    interp.h contains high-order interpolation functions (MUSCL, WCNS).
    mhd_eigen.h contains functions for MHD eigenvectors and characteristic decomposition.
-   mhd_flux.h contains MHD flux functions (MLAU, HLLD, ROE).
+   mhd_flux.h contains MHD flux functions (MLAU, HLLD, LHLLD, ROE).

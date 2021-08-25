@@ -45,7 +45,7 @@ int main(void)
     vy=0.0;
     vz=0.0;
     by[i]=rand_noise(para1,seed);
-    bz[i]=0.0;
+    bz[i]=rand_noise(para1,seed);
     pr=pr0*rand_noise(para2,seed);
     
     mx[i]=ro[i]*vx;
