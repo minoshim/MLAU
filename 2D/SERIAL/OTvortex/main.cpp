@@ -1,14 +1,11 @@
 #include "global.hpp"
 using namespace global;
 
-#include "new_vals.hpp"
-#include "init_grid.hpp"
-#include "init_plasma.hpp"
+#include "new_delete.hpp"
+#include "init.hpp"
 #include "dataio.hpp"
 #include "setbc.hpp"
-#include "delete_vals.hpp"
 #include "cflcheck.hpp"
-#include "cflcomment.hpp"
 
 int main(void)
 {
@@ -16,15 +13,14 @@ int main(void)
   double tim=0;
   clock_t stim,etim;
 
-  new_vals();
+  new_delete();
   init_grid();
   init_plasma();
   dataio(n,cnt,tim);
 
 #if (CFLCHECK)
-  cflcheck(dr,&dt);
+  cflcheck(dr,&dt,1);
 #endif
-  cflcomment(dr,dt);
   
   stim=clock();
   while(n++ < nmax){
@@ -35,7 +31,7 @@ int main(void)
     		 dt,dx,dy,nx,ny,XOFF,YOFF,gam);
 
 #if (CFLCHECK)
-    cflcheck(dr,&dt);
+    cflcheck(dr,&dt,0);
     // I confirm that dt does not change significantly till t=pi in OTvortex
 #endif
 
@@ -48,6 +44,6 @@ int main(void)
   etim=clock();
   printf("%f sec is required for computation.\n",(double)(etim-stim)/CLOCKS_PER_SEC);
 
-  delete_vals();
+  new_delete();
   return 0;
 }

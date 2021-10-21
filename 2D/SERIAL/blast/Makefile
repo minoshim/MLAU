@@ -2,7 +2,8 @@ INCLUDE_PATH = $(HOME)/MLAU/include
 
 # GNU compiler
 CC = g++
-CFLAGS= -O2 -march=native -fopenmp -lm -I$(INCLUDE_PATH)
+# CFLAGS= -O2 -march=native -fopenmp -lm -I$(INCLUDE_PATH)
+CFLAGS= -O2 -fopenmp -lm -I$(INCLUDE_PATH)
 # Intel compiler
 # CC = icpc
 # CFLAGS= -ipo -O2 -xhost -qopenmp -I$(INCLUDE_PATH)
@@ -26,4 +27,4 @@ clean :
 
 mhd_fd_ct_2d.o: bc2d.o $(INCLUDE_PATH)/funcs.h $(INCLUDE_PATH)/interp.h $(INCLUDE_PATH)/mhd_flux.h $(INCLUDE_PATH)/mhd_eigen.h
 
-main.o: bc2d.o mhd_fd_ct_2d.o $(INCLUDE_PATH)/funcs.h myfunc.h cflcheck.hpp cflcomment.hpp dataio.hpp delete_vals.hpp global.hpp init_grid.hpp init_plasma.hpp new_vals.hpp setbc.hpp
+main.o: bc2d.o mhd_fd_ct_2d.o $(INCLUDE_PATH)/funcs.h myfunc.h cflcheck.hpp dataio.hpp global.hpp init.hpp new_delete.hpp setbc.hpp
