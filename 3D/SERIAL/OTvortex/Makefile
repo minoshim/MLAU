@@ -27,4 +27,4 @@ clean :
 
 mhd_fd_ct_3d.o: bc3d.o $(INCLUDE_PATH)/funcs.h $(INCLUDE_PATH)/interp.h $(INCLUDE_PATH)/mhd_flux.h $(INCLUDE_PATH)/mhd_eigen.h
 
-main.o: bc3d.o mhd_fd_ct_3d.o $(INCLUDE_PATH)/funcs.h myfunc.h cflcheck.hpp cflcomment.hpp dataio.hpp delete_vals.hpp global.hpp init_grid.hpp init_plasma.hpp new_vals.hpp setbc.hpp
+main.o: bc3d.o mhd_fd_ct_3d.o $(INCLUDE_PATH)/funcs.h myfunc.h cflcheck.hpp dataio.hpp global.hpp init.hpp new_delete.hpp setbc.hpp
