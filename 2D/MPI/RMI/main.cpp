@@ -4,15 +4,11 @@
 #include "global.hpp"
 using namespace global;
 
-#include "new_vals.hpp"
-#include "init_grid.hpp"
-#include "init_plasma.hpp"
+#include "new_delete.hpp"
+#include "init.hpp"
 #include "dataio.hpp"
-#include "delete_vals.hpp"
 #include "cflcheck.hpp"
-#include "cflcomment.hpp"
-#include "bkup_save.hpp"
-#include "bkup_load.hpp"
+#include "bkup.hpp"
 #include "inj_ro.hpp"
 
 int main(int argc, char* argv[])
@@ -34,18 +30,17 @@ int main(int argc, char* argv[])
   time_t stim,etim;
   double tlimit=1400;           // Calculation time limit in min
 
-  new_vals();
+  new_delete();
   init_grid(mpi_rank);
   init_plasma(mpi_rank);
 
 #if (CFLCHECK)
-  cflcheck(&dt);
+  cflcheck(&dt,!(mpi_rank));
 #endif
   bkup_load(&n,&cnt,&tim,&dt,&trec,nx*ny,mpi_rank);
   if (n == 0){
     dataio(n,cnt,tim,mpi_rank);
   }
-  cflcomment(dr,dt,mpi_rank);
   
   stim=MPI_Wtime();
   while(n++ < nmax){
@@ -64,7 +59,7 @@ int main(int argc, char* argv[])
 		 mpi_rank,mpi_numx,mpi_numy);
 
 #if (CFLCHECK)
-    cflcheck(&dt);
+    cflcheck(&dt,0);
 #endif
 
     // Output
@@ -92,7 +87,7 @@ int main(int argc, char* argv[])
       if (((MPI_Wtime()-stim)/60.) > tlimit){
         if (mpi_rank == 0)
           printf("Exceed time limit %f min. The job is terminated.\n",tlimit);
-        delete_vals();
+        new_delete();
         MPI_Finalize();
         return 0;
       }
@@ -102,7 +97,7 @@ int main(int argc, char* argv[])
   etim=MPI_Wtime();
   if (mpi_rank == 0) printf("%lu sec is required for computation.\n",(unsigned long )(etim-stim));
 
-  delete_vals();
+  new_delete();
   MPI_Finalize();
   return 0;
 }

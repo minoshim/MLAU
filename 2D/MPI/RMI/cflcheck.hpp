@@ -1,4 +1,4 @@
-void cflcheck(double *dt)
+void cflcheck(double *dt, int comment)
 {
   // Check CFL condition and modify time step
   int i,j,ss;
@@ -30,4 +30,8 @@ void cflcheck(double *dt)
   vmax=vmax_a;
 
   if (finite(vmax)) (*dt)=cfl*dr/vmax;
+  if (comment){
+    printf("vmax = %f, dt = %f, dx = %f\n",vmax,(*dt),dr);
+    printf("CFL number = %f\n",vmax*(*dt)/dr);
+  }
 }

@@ -13,8 +13,8 @@
 #define XOFF (4)		// Number of ghost cells in each X side.
 #define YOFF (4)		// Number of ghost cells in each Y side.
 
-#define MNP_X (2)		// Number of MPI processes in X
-#define MNP_Y (10)		// Number of MPI processes in Y
+#define MNP_X (1)		// Number of MPI processes in X
+#define MNP_Y (4)		// Number of MPI processes in Y
 #define MNP (MNP_X*MNP_Y)	// Total number of MPI processes
 
 #define CFLCHECK (1)		// Flag to modify dt at every step
