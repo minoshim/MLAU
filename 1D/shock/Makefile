@@ -2,7 +2,8 @@ INCLUDE_PATH = $(HOME)/MLAU/include
 
 # GNU compiler
 CC = g++
-CFLAGS= -O2 -march=native -fopenmp -lm -I$(INCLUDE_PATH)
+# CFLAGS= -O2 -march=native -fopenmp -lm -I$(INCLUDE_PATH)
+CFLAGS= -O2 -fopenmp -lm -I$(INCLUDE_PATH)
 # Intel compiler
 # CC = icpc
 # CFLAGS= -ipo -O2 -xhost -qopenmp -I$(INCLUDE_PATH)
