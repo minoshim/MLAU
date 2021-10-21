@@ -1,7 +1,8 @@
 INCLUDE_PATH = $(HOME)/MLAU/include
 
 CC = mpic++
-CFLAGS= -O2 -march=native -fopenmp -lm -I$(INCLUDE_PATH)
+# CFLAGS= -O2 -march=native -fopenmp -lm -I$(INCLUDE_PATH)
+CFLAGS= -O2 -fopenmp -lm -I$(INCLUDE_PATH)
 
 OBJ = main.o mhd_fd_ct_3d.o mpi_sdrv3d.o mpi_bc3d.o
 
