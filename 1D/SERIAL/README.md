@@ -17,6 +17,7 @@ Users can select a numerical scheme by editting `mhd_fd4c_1d.c`:
 - `func_flux` (MLAU, HLLD, ROE, or LHLLD) for flux function;
 
 ### Read data via IDL
+Execute the script `rddt.pro` stored in `idl/`
 ```
 >idl
   IDL> .r rddt
