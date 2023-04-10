@@ -27,7 +27,7 @@ The code is tested on Linux OSs (Ubuntu, Linux Mint, CentOS, including Windows S
 1. Download the code from GitHub via `>git clone hppts://github.com/minoshim/MLAU`.
 2. Move to the main directory `MLAU/`.
 3. Check `Makefile.inc` and edit environment variables `CC`, `MPICC`, and `CFLAGS` to meet users environment.
-4. Move to the theme directory (e.g., 1D/SERIAL/) and see README how to run the simulation.
+4. Move to the problem directory (e.g., `1D/SERIAL/`) and see README how to run the simulation.
 
 Since the code is updated without notice, users may update the code via `>git pull origin main`.
 
