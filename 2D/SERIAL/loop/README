@@ -1,4 +1,4 @@
 Comment:
  Magnetic field Bx and By are initialized by numerically discretizing the vector potential Az, and they should satisfy divB=0 in a disretized form.
- When the spatial order is 2nd (ODR = 2 in mhd_fd_ct_2d.c), 2nd-order discretization of Az is sufficient.
- When the spatial order is 4th (ODR = 4), it is recommended to initialize Bx and By via lines 72-81 in init.hpp.
+ When the spatial order is <=2nd (ODR = 1 or 2 in mhd_fd_ct_2d.c), 2nd-order discretization of Az is sufficient.
+ When the spatial order is <=4th (ODR = 3 or 4), it is recommended to initialize Bx and By via lines 72-81 in init.hpp.
