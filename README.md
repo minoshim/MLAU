@@ -13,8 +13,25 @@ Copyright 2020,2021 Takashi Minoshima
 
 Contact at Takashi Minoshima <minoshim@jamstec.go.jp>
 
-## Github site:
-- https://github.com/minoshim/MLAU
+## System requirements
+Following packages are required to be installed on the system:
+- Git to install and update the code;
+- C++ compiler (GNU, Intel);
+- MPI library (MPICH, OpenMPI) to use the MPI parallel code;
+
+To read and visualize the data, Interactive Data Language ([IDL](https://www.harrisgeospatial.co.jp/Software-Technology/IDL)) or Python 3.X with NumPy and matplotlib are required (the latter can be downloaded from [Anaconda](https://www.anaconda.com/products/distribution))
+
+The code is tested on Linux OSs (Ubuntu, Linux Mint, CentOS, including Windows Subsystem for Linux).
+
+Above packages (excluding Intel compiler) can be installed by `apt-get` or `yum` commands.
+
+## Installation
+1. Download the code from GitHub via `>git clone hppts://github.com/minoshim/MLAU`.
+2. Move to the main directory `MLAU/`.
+3. Check `Makefile.inc` and edit environment variables `CC`, `MPICC`, and `CFLAGS` to meet users environment.
+4. Move to the problem directories (e.g., 1D/SERIAL/) and then read README how to run the simulation.
+
+Since the code is updated without notice, you may update the code via `>git pull origin main`.
 
 ## Journal sites:
 - https://iopscience.iop.org/article/10.3847/1538-4365/ab8aee (MLAU)
