@@ -9,9 +9,7 @@ The package also adopts the following techniques for robust and accurate numeric
 
 The current version supports 1D-3D space in Cartesian coordinates and hybrid MPI/OpenMP parallel computation.
  
-Copyright 2020,2021 Takashi Minoshima
-
-Contact at Takashi Minoshima <minoshim@jamstec.go.jp>
+Copyright 2020,2021 Takashi Minoshima <minoshim@jamstec.go.jp>
 
 ## System requirements
 Following packages are required to be installed on the system:
