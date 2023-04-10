@@ -13,10 +13,10 @@ import matplotlib.pyplot as plt
 while True:
     direc=input("Input data directory (Ctrl-D to exit): ")+"/"
     try:
-        x=np.loadtxt(direc+"x.dat",dtype=np.float)
-        t=np.loadtxt(direc+"t.dat",dtype=np.float)
-        xoff=int(np.loadtxt(direc+"xoff.dat",dtype=np.int))
-        para=np.loadtxt(direc+"params.dat",dtype=np.float)
+        x=np.loadtxt(direc+"x.dat",dtype=np.float64)
+        t=np.loadtxt(direc+"t.dat",dtype=np.float64)
+        xoff=int(np.loadtxt(direc+"xoff.dat",dtype=int))
+        para=np.loadtxt(direc+"params.dat",dtype=np.float64)
         break
     except:
         print("Error during file load.")
