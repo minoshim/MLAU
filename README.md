@@ -1,5 +1,5 @@
 # MLAU/LHLLD
-This C++ package is aimed to numerically solve compressible MHD equations with the low-dissipation quasi all-speed Riemann solvers:
+This C++ package is aimed to numerically solve compressible magnetohydrodynamic (MHD) equations with the low-dissipation quasi all-speed Riemann solvers:
 - MLAU - A Multistate Low-dissipation Advection Upstream Splitting Method for Ideal Magnetohydrodynamics[^1];
 - LHLLD- A low-dissipation HLLD approximate Riemann solver for a very wide range of Mach numbers[^2].
 
