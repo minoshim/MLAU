@@ -9,15 +9,16 @@
 
 The result is stored in `dat/`.
 
-Simulation parameters are defined in main.cpp.
+Simulation parameters are defined in `main.cpp`.
 
-Users can select a numerical scheme by editting mhd_fd4c_1d.c:
-- ODR (1, 2, 3, or 4) for spatial order;
-- R_K (1, 2, or 3) for temporal order;
-- func_flux (MLAU, HLLD, LHLLD, or ROE) for flux function;
+Users can select a numerical scheme by editting `mhd_fd4c_1d.c`:
+- `ODR` (1, 2, 3, or 4) for spatial order;
+- `R_K` (1, 2, or 3) for temporal order;
+- `func_flux` (MLAU, HLLD, ROE, or LHLLD) for flux function;
 
 ### Read data via IDL
 ```
+>idl
   IDL> .r rddt
   % Compiled module: $MAIN$.
   Set data directory: dat
@@ -48,7 +49,6 @@ Users can select a numerical scheme by editting mhd_fd4c_1d.c:
   X               FLOAT     = Array[800]
   XOFF            INT       =        4
   ...  
-
 ```
 
 ### Read data via Python
@@ -58,4 +58,3 @@ Execute the python script `batch.py` or `batch_a.py`.
 >python
 >>>exec(open("batch.py").read())
 ```
-
