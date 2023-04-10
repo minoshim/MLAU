@@ -14,10 +14,10 @@ Simulation parameters are defined in `main.cpp`.
 Users can select a numerical scheme by editting `mhd_fd4c_1d.c`:
 - `ODR` (1, 2, 3, or 4) for spatial order;
 - `R_K` (1, 2, or 3) for temporal order;
-- `func_flux` (MLAU, HLLD, ROE, or LHLLD) for flux function;
+- `func_flux` (MLAU, HLLD, ROE, or LHLLD) for flux function.
 
 ### Read data via IDL
-Execute the script `rddt.pro` stored in `idl/`.
+Execute the script `rddt.pro` found in `idl/`.
 ```
 >idl
   IDL> .r rddt
