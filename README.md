@@ -19,7 +19,7 @@ Following packages are required to be installed on the system:
 - C++ compiler (GNU, Intel);
 - MPI library (MPICH, OpenMPI) to use the MPI parallel code;
 
-To read and visualize the data, Interactive Data Language (IDL) or Python 3.X with NumPy and matplotlib are required (the latter can be downloaded from [Anaconda](https://www.anaconda.com/products/distribution))
+To read and visualize the data, Interactive Data Language (IDL, commercial) or Python 3.X with NumPy and matplotlib are required (the latter can be downloaded from [Anaconda](https://www.anaconda.com/products/distribution))
 
 The code is tested on Linux OSs (Ubuntu, Linux Mint, CentOS, including Windows Subsystem for Linux).
 
