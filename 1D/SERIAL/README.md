@@ -1,7 +1,7 @@
 ## MLAU/1D/SERIAL
 Serial codes for the following one-dimensional MHD problems are available:
-- `shock`... standard shock tube problems[^1];
-- `wave`... MHD wave propagation problems[^2].
+- `shock`... standard shock tube problems;
+- `wave`... MHD wave propagation problems.
 
 ### How to run the simulation
 ```
