@@ -1,12 +1,7 @@
-INCLUDE_PATH = $(HOME)/MLAU/include
-
-# GNU compiler
-CC = g++
-# CFLAGS= -O2 -march=native -fopenmp -lm -I$(INCLUDE_PATH)
-CFLAGS= -O2 -fopenmp -lm -I$(INCLUDE_PATH)
-# Intel compiler
-# CC = icpc
-# CFLAGS= -ipo -O2 -xhost -qopenmp -I$(INCLUDE_PATH)
+DIR0 = ../../..
+include $(DIR0)/Makefile.inc
+INCLUDE_PATH = $(DIR0)/include
+INCDIR = -I$(INCLUDE_PATH)
 
 OBJ = main.o mhd_fd4c_1d.o openbc1d_mhd.o
 
@@ -14,13 +9,13 @@ OBJ = main.o mhd_fd4c_1d.o openbc1d_mhd.o
 .PHONY : clean
 
 all : $(OBJ)
-	$(CC) -o a.out $(OBJ) $(CFLAGS)
+	$(CC) -o a.out $(OBJ) $(CFLAGS) $(INCDIR)
 
 %.o : %.c
-	$(CC) -c $< $(CFLAGS)
+	$(CC) -c $< $(CFLAGS) $(INCDIR)
 
 %.o : %.cpp
-	$(CC) -c $< $(CFLAGS)
+	$(CC) -c $< $(CFLAGS) $(INCDIR)
 
 clean : 
 	rm *.o a.out dat/*.dat -f
