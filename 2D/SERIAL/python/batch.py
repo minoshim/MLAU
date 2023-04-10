@@ -8,16 +8,17 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
+from python import plt2d
 
 #Read independent variables and parameters
 while True:
     direc=input("Input data directory (Ctrl-D to exit): ")+"/"
     try:
-        x=np.loadtxt(direc+"x.dat",dtype=np.float)
-        y=np.loadtxt(direc+"y.dat",dtype=np.float)
-        t=np.loadtxt(direc+"t.dat",dtype=np.float)
-        offs=np.loadtxt(direc+"offsets.dat",dtype=np.int)
-        para=float(np.loadtxt(direc+"params.dat",dtype=np.float))
+        x=np.loadtxt(direc+"x.dat",dtype=np.float64)
+        y=np.loadtxt(direc+"y.dat",dtype=np.float64)
+        t=np.loadtxt(direc+"t.dat",dtype=np.float64)
+        offs=np.loadtxt(direc+"offsets.dat",dtype=int)
+        para=float(np.loadtxt(direc+"params.dat",dtype=np.float64))
         break
     except:
         print("Error during file load.")
@@ -62,12 +63,4 @@ data2=np.array([ro,vx,vy,vz,pr,bx,by,bz])
 
 #Plot
 val=pr/ro
-fig=plt.figure()
-plt.axes().set_aspect("equal")
-plt.pcolormesh(x,y,val,cmap="jet")
-plt.xlabel("x")
-plt.ylabel("y")
-plt.title(f"t={t[sst]:.2f}")
-plt.colorbar()
-fig.savefig("result.eps")
-plt.show(block=False) # console non-blocked
+a=plt2d.image(x=x,y=y,val=val,save=0,title=f"t={t[sst]:.2f}",show=1,equal=0)
