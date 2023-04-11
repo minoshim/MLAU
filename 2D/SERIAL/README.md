@@ -1,4 +1,4 @@
-## qasMHD/2D/SERIAL
+## MLAU/2D/SERIAL
 Serial codes for the following two-dimensional MHD problems are available:
 - `OTvortex` ... Orszag-Tang vortex problem;
 - `blast` ... blast wave propagation problem;
