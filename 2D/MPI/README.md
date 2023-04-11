@@ -13,7 +13,7 @@ MPI parallel codes for the following two-dimensional MHD problems are available:
 >mpiexec -np 16 -x OMP_NUM_THREADS=2 ./a.out    #for OpenMPI users
 ```
 
-Here `16` is the number of MPI processes and `1` is the number of OpenMP threads, thus 32 CPU cores are used for this example run.
+Here `16` is the number of MPI processes and `2` is the number of OpenMP threads, thus 32 CPU cores are used for this example run.
 
 The number of MPI processes should be equal to the value of `MNP` defined in `global.hpp` (otherwise, the simulation does not run).
 
@@ -30,7 +30,7 @@ Users can select a numerical scheme by editting `mhd_fd_ct_2d.c`:
 
 ## Read data with IDL
 
-Execute the scripts `rddt.pro` and `read_mhd.pro`found in `idl/`.
+Execute the scripts `rddt.pro` and `read_mhd.pro` found in `idl/`.
 ```
 >idl
   IDL> .r rddt
