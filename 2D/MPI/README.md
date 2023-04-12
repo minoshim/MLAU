@@ -89,7 +89,7 @@ Execute the scripts `rddt.pro` and `read_mhd.pro` found in `idl/`.
 
 ### Read data with Python
 
-Users firtly merge the raw simulation data that is MPI-decomposed,
+Users firtly merge the raw simulation data that is MPI-decomposed:
 ```
 >./merge.out dat/ dat/
 ```
