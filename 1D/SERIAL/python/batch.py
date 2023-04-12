@@ -14,7 +14,7 @@ while True:
     direc=input("Input data directory (Ctrl-D to exit): ")+"/"
     try:
         x=np.loadtxt(direc+"x.dat",dtype=np.float64)
-        t=np.loadtxt(direc+"t.dat",dtype=np.float64)
+        t=np.atleast_1d(np.loadtxt(direc+"t.dat",dtype=np.float64))
         xoff=int(np.loadtxt(direc+"xoff.dat",dtype=int))
         para=np.loadtxt(direc+"params.dat",dtype=np.float64)
         break
@@ -45,10 +45,11 @@ ro=data2[0,:]
 vx=data2[1,:]/ro
 vy=data2[2,:]/ro
 vz=data2[3,:]/ro
+en=data2[4,:]
 bx=np.array([bx0]*(nx-2*xoff))
 by=data2[5,:]
 bz=data2[6,:]
-pr=(gam-1)*(data2[4,:]-0.5*(ro*(vx**2+vy**2+vz**2)+(bx**2+by**2+bz**2)))
+pr=(gam-1)*(en-0.5*(ro*(vx**2+vy**2+vz**2)+(bx**2+by**2+bz**2)))
 data2=np.array([ro,vx,vy,vz,pr,bx,by,bz])
 
 #Plot
@@ -62,6 +63,6 @@ for i in range(0,8):
     plt.ylabel(ylabels[i])
 
 fig.tight_layout()
-fig.savefig("result.eps")
+# fig.savefig("result.eps")
 # plt.show() #console blocked
 plt.show(block=False) # console non-blocked
