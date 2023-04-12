@@ -34,7 +34,7 @@ Since the code is updated without notice, users may update the code via `>git pu
 - https://www.sciencedirect.com/science/article/pii/S0021999121005349 (LHLLD)
 
 ## arXiv sites:
-- http://arxiv.org/abs/2004.08012 (MLAU)
+- https://arxiv.org/abs/2004.08012 (MLAU)
 - https://arxiv.org/abs/2108.04991 (LHLLD)
 
 [^1]: [Minoshima T., Kitamura K., and Miyoshi T. 2020, ApJS](https://iopscience.iop.org/article/10.3847/1538-4365/ab8aee/meta)
