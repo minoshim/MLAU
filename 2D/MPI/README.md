@@ -86,3 +86,16 @@ Execute the scripts `rddt.pro` and `read_mhd.pro` found in `idl/`.
   RO              FLOAT     = Array[200, 200]
   ...
 ```
+
+### Read data with Python
+
+Users firtly merge the raw simulation data that is MPI-decomposed,
+```
+>./merge.out dat/ dat/
+```
+
+Subsequently, execute the python script `batch.py`.
+```
+>python
+>>>exec(open("batch.py").read())
+```
