@@ -153,7 +153,7 @@ void mpi_xbc2d(double *f, int nx, int ny, int xoff, int yoff, int st, int dn,
 /* st: Flag for staggered grid. Set 1 when f is @ cell face (not center) */
 /* dn: Factor of Dirichlet (-1) or Neumann (+1). if dn==0, nothing to do */
 {
-  if (dn != 0 || PRDC_X == 0){
+  if (dn != 0 && PRDC_X == 0){
     int i,j;
     /* Left */
     if ((mpi_rank % mpi_numx) == 0){
@@ -176,7 +176,7 @@ void mpi_ybc2d(double *f, int nx, int ny, int xoff, int yoff, int st, int dn,
 /* st: Flag for staggered grid. Set 1 when f is @ cell face (not center) */
 /* dn: Factor of Dirichlet (-1) or Neumann (+1). if dn==0, nothing to do */
 {
-  if (dn != 0 || PRDC_Y == 0){
+  if (dn != 0 && PRDC_Y == 0){
     int i,j;
     /* Left */
     if (mpi_rank/mpi_numx == 0){
