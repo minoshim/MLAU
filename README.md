@@ -3,9 +3,9 @@ This C++ package is aimed to numerically solve compressible magnetohydrodynamic 
 - MLAU - A Multistate Low-dissipation Advection Upstream Splitting Method for Ideal Magnetohydrodynamics[^1];
 - LHLLD- A low-dissipation HLLD approximate Riemann solver for a very wide range of Mach numbers[^2].
 
-The package also adopts the following techniques for robust and accurate numerical simulations:
+The package also adopts the following techniques for robust and accurate numerical simulations[^3]:
 - up to 4th order accuracy in space and 3rd order accuracy in time;
-- preservation of the solenoidal condition of the magnetic field by a well-designed Contrained Transport method[^3].
+- preservation of the solenoidal condition of the magnetic field by a well-designed Contrained Transport method.
 
 The current version supports 1D-3D space in Cartesian coordinates and hybrid MPI/OpenMP parallel computation.
  
