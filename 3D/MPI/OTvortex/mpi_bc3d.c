@@ -15,6 +15,15 @@
 /* You should have received a copy of the GNU General Public License */
 /* along with MLAU.  If not, see <https://www.gnu.org/licenses/>. */
 
+#include <stdlib.h>
+#include "mpi.h"
+
+#define PRDC_X (1)		/* Set 1 for periodic in X */
+#define PRDC_Y (1)		/* Set 1 for periodic in Y */
+#define PRDC_Z (1)		/* Set 1 for periodic in Z */
+
+void mpi_sdrv3d(double *f[], int nn, int nx, int ny, int nz, int xoff, int yoff, int zoff,
+		int mpi_rank, int mpi_numx, int mpi_numy, int mpi_numz);
 void mpi_xbc3d(double *f, int nx, int ny, int nz, int xoff, int yoff, int zoff, int st, int dn,
 	       int mpi_rank, int mpi_numx, int mpi_numy, int mpi_numz);
 void mpi_ybc3d(double *f, int nx, int ny, int nz, int xoff, int yoff, int zoff, int st, int dn,
@@ -22,13 +31,204 @@ void mpi_ybc3d(double *f, int nx, int ny, int nz, int xoff, int yoff, int zoff, 
 void mpi_zbc3d(double *f, int nx, int ny, int nz, int xoff, int yoff, int zoff, int st, int dn,
 	       int mpi_rank, int mpi_numx, int mpi_numy, int mpi_numz);
 
+void mpi_sdrv3d(double *f[], int nn, int nx, int ny, int nz, int xoff, int yoff, int zoff,
+		int mpi_rank, int mpi_numx, int mpi_numy, int mpi_numz)
+/* 3D MPI SendRecv */
+{
+  int i,j,k,n;
+  int m_xy=mpi_numx*mpi_numy;
+  int mpi_tag=0;
+  int rankl,rankh;
+  int ntot,ntot2;
+  MPI_Status r_stat;
+  double *fold,*fcpy;
+
+  /* XBC */
+#if (PRDC_X)
+  rankl=(((mpi_rank%m_xy)%mpi_numx) == 0)?(mpi_rank+(mpi_numx-1)):(mpi_rank-1);
+  rankh=(((mpi_rank%m_xy)%mpi_numx) == (mpi_numx-1))?(mpi_rank-(mpi_numx-1)):(mpi_rank+1);
+#else
+  rankl=(((mpi_rank%m_xy)%mpi_numx) == 0)?(MPI_PROC_NULL):(mpi_rank-1);
+  rankh=(((mpi_rank%m_xy)%mpi_numx) == (mpi_numx-1))?(MPI_PROC_NULL):(mpi_rank+1);
+#endif  
+  if (mpi_numx != 1){
+    ntot=nn*ny*nz*xoff;
+    ntot2=ntot*2;
+    fold=(double*)malloc(sizeof(double)*ntot2);
+    fcpy=(double*)malloc(sizeof(double)*ntot2);
+    for (i=0;i<xoff;i++){
+      for (k=0;k<nz;k++){
+	for (j=0;j<ny;j++){	/* Transpose */
+	  for (n=0;n<nn;n++){
+	    fold[nn*(ny*(nz*i+k)+j)+n]=f[n][nx*(ny*k+j)+(xoff+i)];
+	    fold[nn*(ny*(nz*(2*xoff-1-i)+k)+j)+n]=f[n][nx*(ny*k+j)+(nx-xoff-1-i)];
+	    fcpy[nn*(ny*(nz*i+k)+j)+n]=f[n][nx*(ny*k+j)+i];
+	    fcpy[nn*(ny*(nz*(2*xoff-1-i)+k)+j)+n]=f[n][nx*(ny*k+j)+(nx-1-i)];
+	  }
+	}
+      }
+    }
+    MPI_Sendrecv(&fold[0],ntot,MPI_DOUBLE,rankl,mpi_tag,
+		 &fcpy[ntot],ntot,MPI_DOUBLE,rankh,mpi_tag,
+		 MPI_COMM_WORLD,&r_stat);
+    MPI_Sendrecv(&fold[ntot],ntot,MPI_DOUBLE,rankh,mpi_tag,
+		 &fcpy[0],ntot,MPI_DOUBLE,rankl,mpi_tag,
+		 MPI_COMM_WORLD,&r_stat);
+    for (k=0;k<nz;k++){
+      for (j=0;j<ny;j++){
+	for (i=0;i<xoff;i++){
+	  for (n=0;n<nn;n++){
+	    f[n][nx*(ny*k+j)+i]=fcpy[nn*(ny*(nz*i+k)+j)+n];
+	    f[n][nx*(ny*k+j)+(nx-1-i)]=fcpy[nn*(ny*(nz*(2*xoff-1-i)+k)+j)+n];
+	  }
+	}
+      }
+    }
+    free(fold);
+    free(fcpy);
+  } else{
+#if (PRDC_X)
+    /* Periodic. avoid communication to myself */
+    for (n=0;n<nn;n++){
+      for (k=0;k<nz;k++){
+	for (j=0;j<ny;j++){
+	  for (i=0;i<xoff;i++){
+	    f[n][nx*(ny*k+j)+(nx-1-i)]=f[n][nx*(ny*k+j)+(2*xoff-1-i)];
+	    f[n][nx*(ny*k+j)+i]=f[n][nx*(ny*k+j)+(nx-2*xoff+i)];
+	  }
+	}
+      }
+    }
+#endif
+  }
+  
+  /* YBC */
+#if (PRDC_Y)
+  rankl=(((mpi_rank%m_xy)/mpi_numx) == 0)?(mpi_rank+mpi_numx*(mpi_numy-1)):(mpi_rank-mpi_numx);
+  rankh=(((mpi_rank%m_xy)/mpi_numx) == (mpi_numy-1))?(mpi_rank-mpi_numx*(mpi_numy-1)):(mpi_rank+mpi_numx);
+#else
+  rankl=(((mpi_rank%m_xy)/mpi_numx) == 0)?(MPI_PROC_NULL):(mpi_rank-mpi_numx);
+  rankh=(((mpi_rank%m_xy)/mpi_numx) == (mpi_numy-1))?(MPI_PROC_NULL):(mpi_rank+mpi_numx);
+#endif
+  if (mpi_numy != 1){
+    ntot=nn*nz*nx*yoff;
+    ntot2=ntot*2;
+    fold=(double*)malloc(sizeof(double)*ntot2);
+    fcpy=(double*)malloc(sizeof(double)*ntot2);
+    for (j=0;j<yoff;j++){
+      for (i=0;i<nx;i++){
+	for (k=0;k<nz;k++){	/* Transpose */
+	  for (n=0;n<nn;n++){
+	    fold[nn*(nz*(nx*j+i)+k)+n]=f[n][nx*(ny*k+(yoff+j))+i];
+	    fold[nn*(nz*(nx*(2*yoff-1-j)+i)+k)+n]=f[n][nx*(ny*k+(ny-yoff-1-j))+i];
+	    fcpy[nn*(nz*(nx*j+i)+k)+n]=f[n][nx*(ny*k+j)+i];
+	    fcpy[nn*(nz*(nx*(2*yoff-1-j)+i)+k)+n]=f[n][nx*(ny*k+(ny-1-j))+i];
+	  }
+	}
+      }
+    }
+    MPI_Sendrecv(&fold[0],ntot,MPI_DOUBLE,rankl,mpi_tag,
+		 &fcpy[ntot],ntot,MPI_DOUBLE,rankh,mpi_tag,
+		 MPI_COMM_WORLD,&r_stat);
+    MPI_Sendrecv(&fold[ntot],ntot,MPI_DOUBLE,rankh,mpi_tag,
+		 &fcpy[0],ntot,MPI_DOUBLE,rankl,mpi_tag,
+		 MPI_COMM_WORLD,&r_stat);
+    for (k=0;k<nz;k++){
+      for (j=0;j<yoff;j++){
+	for (i=0;i<nx;i++){
+	  for (n=0;n<nn;n++){
+	    f[n][nx*(ny*k+j)+i]=fcpy[nn*(nz*(nx*j+i)+k)+n];
+	    f[n][nx*(ny*k+(ny-1-j))+i]=fcpy[nn*(nz*(nx*(2*yoff-1-j)+i)+k)+n];
+	  }
+	}
+      }
+    }
+    free(fold);
+    free(fcpy);
+  } else{
+#if (PRDC_Y)
+    /* Periodic. avoid communication to myself */
+    for (n=0;n<nn;n++){
+      for (k=0;k<nz;k++){
+	for (j=0;j<yoff;j++){
+	  for (i=0;i<nx;i++){
+	    f[n][nx*(ny*k+(ny-1-j))+i]=f[n][nx*(ny*k+(2*yoff-1-j))+i];
+	    f[n][nx*(ny*k+j)+i]=f[n][nx*(ny*k+(ny-2*yoff+j))+i];
+	  }
+	}
+      }
+    }
+#endif
+  }
+
+  /* ZBC */
+#if (PRDC_Z)
+  rankl=((mpi_rank/m_xy) == 0)?(mpi_rank+m_xy*(mpi_numz-1)):(mpi_rank-m_xy);
+  rankh=((mpi_rank/m_xy) == (mpi_numz-1))?(mpi_rank-m_xy*(mpi_numz-1)):(mpi_rank+m_xy);
+#else
+  rankl=((mpi_rank/m_xy) == 0)?(MPI_PROC_NULL):(mpi_rank-m_xy);
+  rankh=((mpi_rank/m_xy) == (mpi_numz-1))?(MPI_PROC_NULL):(mpi_rank+m_xy);
+#endif
+  if (mpi_numz != 1){
+    ntot=nn*nx*ny*zoff;
+    ntot2=ntot*2;
+    fold=(double*)malloc(sizeof(double)*ntot2);
+    fcpy=(double*)malloc(sizeof(double)*ntot2);
+    for (k=0;k<zoff;k++){
+      for (j=0;j<ny;j++){
+	for (i=0;i<nx;i++){
+	  for (n=0;n<nn;n++){
+	    fold[nn*(nx*(ny*k+j)+i)+n]=f[n][nx*(ny*(zoff+k)+j)+i];
+	    fold[nn*(nx*(ny*(2*zoff-1-k)+j)+i)+n]=f[n][nx*(ny*(nz-zoff-1-k)+j)+i];
+	    fcpy[nn*(nx*(ny*k+j)+i)+n]=f[n][nx*(ny*k+j)+i];
+	    fcpy[nn*(nx*(ny*(2*zoff-1-k)+j)+i)+n]=f[n][nx*(ny*(nz-1-k)+j)+i];
+	  }
+	}
+      }
+    }
+    MPI_Sendrecv(&fold[0],ntot,MPI_DOUBLE,rankl,mpi_tag,
+		 &fcpy[ntot],ntot,MPI_DOUBLE,rankh,mpi_tag,
+		 MPI_COMM_WORLD,&r_stat);
+    MPI_Sendrecv(&fold[ntot],ntot,MPI_DOUBLE,rankh,mpi_tag,
+		 &fcpy[0],ntot,MPI_DOUBLE,rankl,mpi_tag,
+		 MPI_COMM_WORLD,&r_stat);
+    for (k=0;k<zoff;k++){
+      for (j=0;j<ny;j++){
+	for (i=0;i<nx;i++){
+	  for (n=0;n<nn;n++){
+	    f[n][nx*(ny*k+j)+i]=fcpy[nn*(nx*(ny*k+j)+i)+n];
+	    f[n][nx*(ny*(nz-1-k)+j)+i]=fcpy[nn*(nx*(ny*(2*zoff-1-k)+j)+i)+n];
+	  }
+	}
+      }
+    }
+    free(fold);
+    free(fcpy);
+  } else{
+#if (PRDC_Z)
+    /* Periodic. avoid communication to myself */
+    for (n=0;n<nn;n++){
+      for (k=0;k<zoff;k++){
+	for (j=0;j<ny;j++){
+	  for (i=0;i<nx;i++){
+	    f[n][nx*(ny*(nz-1-k)+j)+i]=f[n][nx*(ny*(2*zoff-1-k)+j)+i];
+	    f[n][nx*(ny*k+j)+i]=f[n][nx*(ny*(nz-2*zoff+k)+j)+i];
+	  }
+	}
+      }
+    }
+#endif
+  }
+
+}
+
 void mpi_xbc3d(double *f, int nx, int ny, int nz, int xoff, int yoff, int zoff, int st, int dn,
 	       int mpi_rank, int mpi_numx, int mpi_numy, int mpi_numz)
 /* 3D X Dirichlet or Neumann BC under MPI */
 /* st: Flag for staggered grid. Set 1 when f is @ cell face (not center) */
 /* dn: Factor of Dirichlet (-1) or Neumann (+1). if dn==0, nothing to do */
 {
-  if (dn != 0){
+  if (dn != 0 && PRDC_X == 0){
     unsigned long i,j,k;
     int m_xy=mpi_numx*mpi_numy;
     /* Left */
@@ -56,7 +256,7 @@ void mpi_ybc3d(double *f, int nx, int ny, int nz, int xoff, int yoff, int zoff, 
 /* st: Flag for staggered grid. Set 1 when f is @ cell face (not center) */
 /* dn: Factor of Dirichlet (-1) or Neumann (+1). if dn==0, nothing to do */
 {
-  if (dn != 0){
+  if (dn != 0 && PRDC_Y == 0){
     unsigned long i,j,k;
     int m_xy=mpi_numx*mpi_numy;
     /* Left */
@@ -84,7 +284,7 @@ void mpi_zbc3d(double *f, int nx, int ny, int nz, int xoff, int yoff, int zoff, 
 /* st: Flag for staggered grid. Set 1 when f is @ cell face (not center) */
 /* dn: Factor of Dirichlet (-1) or Neumann (+1). if dn==0, nothing to do */
 {
-  if (dn != 0){
+  if (dn != 0 && PRDC_Z == 0){
     unsigned long i,j,k;
     int m_xy=mpi_numx*mpi_numy;
     /* Left */
