@@ -28,7 +28,7 @@ Users can select a numerical scheme by editting `mhd_fd_ct_2d.c`:
 - `R_K` (1, 2, or 3) for temporal order;
 - `func_flux` (MLAU, HLLD, ROE, or LHLLD) for flux function.
 
-## Read data with IDL
+### Read data with IDL
 
 Execute the scripts `rddt.pro` and `read_mhd.pro` found in `idl/`.
 ```
