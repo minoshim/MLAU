@@ -54,37 +54,6 @@ Execute the scripts `rddt.pro` and `read_mhd.pro` found in `idl/`.
   BY_CT           FLOAT     = Array[200, 200]
   BZ              FLOAT     = Array[200, 200]
   DIR             STRING    = 'dat'
-  DT              FLOAT     =      0.628319
-  DX              FLOAT     =     0.0314159
-  DY              FLOAT     =     0.0314159
-  EN              FLOAT     = Array[200, 200]
-  FIL             STRING    = Array[16]
-  FTMP            STRING    = 'dat/outdat_00005*.dat'
-  GAMMA           FLOAT     =       1.66667
-  I               INT       =      199
-  IDX             FLOAT     =       31.8310
-  IDY             FLOAT     =       31.8310
-  IE              LONG      =          199
-  IS              LONG      =          150
-  J               INT       =      199
-  JE              LONG      =          199
-  JS              LONG      =          150
-  JUNK            FLOAT     = Array[6]
-  LIB_DIR         STRING    = '~/lib/idl'
-  MNP_X           LONG      =            4
-  MNP_Y           LONG      =            4
-  MX              FLOAT     = Array[200, 200]
-  MY              FLOAT     = Array[200, 200]
-  MZ              FLOAT     = Array[200, 200]
-  NT              LONG      =            6
-  NX              LONG      =          200
-  NXTMP           LONG      =           58
-  NY              LONG      =          200
-  NYTMP           LONG      =           58
-  OFFSETS         INT       = Array[2]
-  PARAMS          FLOAT     = Array[1]
-  PR              FLOAT     = Array[200, 200]
-  RO              FLOAT     = Array[200, 200]
   ...
 ```
 
