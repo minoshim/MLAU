@@ -81,6 +81,13 @@ inline double calc_df(const double *f)
 #endif
 }
 
+/* Boundary condition flag, defined in global.hpp */
+extern int dnxs[8];
+extern int dnys[8];
+/* Staggered grid flag, defined in global.hpp */
+extern int stxs[8];
+extern int stys[8];
+
 void mhd_fd_ct_2d(double *ro, double *mx, double *my, double *mz,
 		  double *en, double *bx, double *by, double *bz,
 		  double dt, double dx, double dy,
@@ -189,8 +196,8 @@ void mhd_fd_ct_2d(double *ro, double *mx, double *my, double *mz,
 #pragma omp single
 #endif
       {
-	bc2d(&cx[0],nx,ny,xoff,yoff,0,0,0,0);
-	bc2d(&cy[0],nx,ny,xoff,yoff,0,0,0,0);
+	bc2d(&cx[0],nx,ny,xoff,yoff,0,dnxs[5],0,dnys[5]);
+	bc2d(&cy[0],nx,ny,xoff,yoff,0,dnxs[6],0,dnys[6]);
       }
 
       /* Primitive variable at cell center */
@@ -259,8 +266,8 @@ void mhd_fd_ct_2d(double *ro, double *mx, double *my, double *mz,
 #pragma omp single
 #endif
       {
-	bc2d(&dvx[0],nx,ny,xoff,yoff,0,0,0,0);
-	bc2d(&dvy[0],nx,ny,xoff,yoff,0,0,0,0);
+	bc2d(&dvx[0],nx,ny,xoff,yoff,0,-dnxs[1],0,+dnys[1]);
+	bc2d(&dvy[0],nx,ny,xoff,yoff,0,+dnxs[2],0,-dnys[2]);
       }
 
       /* Primitive variable at cell face along X */
@@ -627,14 +634,8 @@ void mhd_fd_ct_2d(double *ro, double *mx, double *my, double *mz,
     } /* OpenMP */
 
     /* Boundary condition */
-    bc2d(&ro[0],nx,ny,xoff,yoff,0,0,0,0);
-    bc2d(&mx[0],nx,ny,xoff,yoff,0,0,0,0);
-    bc2d(&my[0],nx,ny,xoff,yoff,0,0,0,0);
-    bc2d(&mz[0],nx,ny,xoff,yoff,0,0,0,0);
-    bc2d(&en[0],nx,ny,xoff,yoff,0,0,0,0);
-    bc2d(&bx[0],nx,ny,xoff,yoff,1,0,0,0);
-    bc2d(&by[0],nx,ny,xoff,yoff,0,0,1,0);
-    bc2d(&bz[0],nx,ny,xoff,yoff,0,0,0,0);
+    double* p[8]={ro,mx,my,mz,en,bx,by,bz};
+    for (int n=0;n<8;n++) bc2d(p[n],nx,ny,xoff,yoff,stxs[n],dnxs[n],stys[n],dnys[n]);
   }
 
   free(ut);

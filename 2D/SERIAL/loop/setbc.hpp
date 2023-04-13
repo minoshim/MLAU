@@ -1,12 +1,6 @@
 void setbc()
 {
   // Set boundary condition
-  bc2d(ro,nx,ny,XOFF,YOFF,0,0,0,0);
-  bc2d(mx,nx,ny,XOFF,YOFF,0,0,0,0);
-  bc2d(my,nx,ny,XOFF,YOFF,0,0,0,0);
-  bc2d(mz,nx,ny,XOFF,YOFF,0,0,0,0);
-  bc2d(en,nx,ny,XOFF,YOFF,0,0,0,0);
-  bc2d(bx,nx,ny,XOFF,YOFF,1,0,0,0);
-  bc2d(by,nx,ny,XOFF,YOFF,0,0,1,0);
-  bc2d(bz,nx,ny,XOFF,YOFF,0,0,0,0);
+  double* p[8]={ro,mx,my,mz,en,bx,by,bz};
+  for (int n=0;n<8;n++) bc2d(p[n],nx,ny,XOFF,YOFF,stxs[n],dnxs[n],stys[n],dnys[n]);
 }
