@@ -19,7 +19,7 @@ Users can abort the run by Ctrl+C, and restart it by the same `a.out` and comman
 The result is stored in `dat/`.
 
 Simulation parameters are defined in `global.hpp`:<br>
-`XMESH`, `YMESH`, and `ZMESH` define the number of calculation cells in the whole X, Y, and Z domain, and they should be an integer multiple of the number of MPI processes in X, Y, and Z directions, `MNP_X`, `MNP_Y`. and `MNP_Z`.
+`XMESH`, `YMESH`, and `ZMESH` define the number of calculation cells in the whole X, Y, and Z domain, and they should be an integer multiple of the number of MPI processes in X, Y, and Z directions, `MNP_X`, `MNP_Y` and `MNP_Z`.
 
 Users can select a numerical scheme by editting `mhd_fd_ct_3d.c`:
 - `ODR` (1, 2, 3, or 4) for spatial order;
