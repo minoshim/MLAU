@@ -56,9 +56,17 @@ Execute the script `rddt.pro` found in `idl/`.
 ```
 
 ### Read data with Python
-Execute the python script `batch.py` or `batch_a.py`.
-
+Execute the python script `batch.py` to read the data at a particular period,
 ```
 >python
 >>>exec(open("batch.py").read())
+Input data directory (Ctrl-D to exit): dat
+Specity time period (0-50): 20
+```
+or `batch_a.py` to read the whole data.
+```
+>python
+>>> exec(open('batch_a.py').read())
+Input data directory (Ctrl-D to exit): dat
+Specity time period to plot (0-50): 20
 ```
