@@ -28,6 +28,26 @@ Users can select a numerical scheme by editting `mhd_fd_ct_3d.c`:
 ### Read data with IDL
 
 Execute the scripts `rddt.pro` and `read_mhd.pro` found in `idl/`.
+```
+>idl
+  IDL> .r rddt
+  % Compiled module: $MAIN$.
+  Set data directory: dat
+  % Compiled module: FILE_READS.
+  % $MAIN$: Independent varaibles are loaded.
+  % $MAIN$: To load MHD data, call READ_MHD.
+  IDL> .r read_mhd
+  % Compiled module: $MAIN$.
+  Set time step (0 - 5) : 5
+  Read MHD data at 5 step
+  % Compiled module: BINARY_READ.
+  IDL> help
+  ...
+  BX              DOUBLE    = Array[200, 200, 4]
+  BY              DOUBLE    = Array[200, 200, 4]
+  BZ              DOUBLE    = Array[200, 200, 4]
+  ...
+```
 
 ### Read data with Python
 
