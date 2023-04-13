@@ -89,13 +89,15 @@ Execute the scripts `rddt.pro` and `read_mhd.pro` found in `idl/`.
 
 ### Read data with Python
 
-Users firtly merge the raw simulation data that is MPI-decomposed:
+Users firtly merge the raw simulation data that is MPI-decomposed,
 ```
 >./merge.out dat/ dat/
 ```
 
-Subsequently, execute the python script `batch.py`.
+Subsequently, execute the python script `batch.py` to read the data at a particular period.
 ```
 >python
 >>>exec(open("batch.py").read())
+Input data directory (Ctrl-D to exit): dat
+Specity time period (0-5): 5
 ```
