@@ -16,16 +16,16 @@ while True:
     try:
         x=np.loadtxt(direc+"x.dat",dtype=np.float64)
         y=np.loadtxt(direc+"y.dat",dtype=np.float64)
-        t=np.loadtxt(direc+"t.dat",dtype=np.float64)
+        t=np.atleast_1d(np.loadtxt(direc+"t.dat",dtype=np.float64))
         offs=np.loadtxt(direc+"offsets.dat",dtype=int)
-        para=float(np.loadtxt(direc+"params.dat",dtype=np.float64))
+        para=np.atleast_1d(np.loadtxt(direc+"params.dat",dtype=np.float64))
         break
     except:
         print("Error during file load.")
 
 xoff=offs[0]
 yoff=offs[1]
-gam=para
+gam=para[0]
 
 #Number of elements
 nx=np.size(x)
@@ -50,6 +50,7 @@ ro=data2[0,:,:]
 vx=data2[1,:,:]/ro
 vy=data2[2,:,:]/ro
 vz=data2[3,:,:]/ro
+en=data2[4,:,:]
 bx=data2[5,:,:]
 by=data2[6,:,:]
 # Cell-face to cell-center B
@@ -58,7 +59,7 @@ for i in range(0,nx-2*xoff):
 for j in range(0,ny-2*yoff):
     by[j,:]=0.5*(data[6,j+yoff,xoff:nx-xoff]+data[6,j+1+yoff,xoff:nx-xoff])
 bz=data2[7,:,:]
-pr=(gam-1)*(data2[4,:,:]-0.5*(ro*(vx**2+vy**2+vz**2)+(bx**2+by**2+bz**2)))
+pr=(gam-1)*(en-0.5*(ro*(vx**2+vy**2+vz**2)+(bx**2+by**2+bz**2)))
 data2=np.array([ro,vx,vy,vz,pr,bx,by,bz])
 
 #Plot
