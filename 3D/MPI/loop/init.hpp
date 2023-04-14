@@ -35,7 +35,7 @@ inline double cal_da(double *a)
 {
   double ans=(a[2]-a[1]);	// 2nd order discretization
 #if (ODR > 2)
-  ans=(27.0*(a[2]-a[1])-(a[3]-a[0]))/24.0 // 4th order discretization
+  ans=(27.0*(a[2]-a[1])-(a[3]-a[0]))/24.0; // 4th order discretization
 #endif
   return(ans);
 }
