@@ -8,19 +8,30 @@
 #include <time.h>
 #include "myfunc.h"
 
-#define XMESH (200)		// Number of cells in X domain
-#define YMESH (200)		// Number of cells in Y domain
-#define ZMESH (4)		// Number of cells in Z domain
+#define XMESH (100)		// Number of cells in X domain
+#define YMESH (100)		// Number of cells in Y domain
+#define ZMESH (100)		// Number of cells in Z domain
 #define XOFF (4)		// Number of ghost cells in each X side.
 #define YOFF (4)		// Number of ghost cells in each Y side.
 #define ZOFF (4)		// Number of ghost cells in each Z side.
 
-#define MNP_X (4)		// Number of MPI processes in X
-#define MNP_Y (4)		// Number of MPI processes in Y
-#define MNP_Z (1)		// Number of MPI processes in Z
+#define MNP_X (2)		// Number of MPI processes in X
+#define MNP_Y (2)		// Number of MPI processes in Y
+#define MNP_Z (2)		// Number of MPI processes in Z
 #define MNP (MNP_X*MNP_Y*MNP_Z)	// Total number of MPI processes
 
 #define CFLCHECK (0)		// Flag to modify dt at every step
+
+int dnxs[8]={0,0,0,0,0,0,0,0};
+int dnys[8]={0,0,0,0,0,0,0,0};
+int dnzs[8]={0,0,0,0,0,0,0,0};
+// Boundary condition flag for ro,mx,my,mz,en,bx,by,bz (be sure of variable order)
+// 0=Periodic, +1=Neumann, -1=Dirichlet
+int stxs[8]={0,0,0,0,0,1,0,0};
+int stys[8]={0,0,0,0,0,0,1,0};
+int stzs[8]={0,0,0,0,0,0,0,1};
+// Staggered grid flag for ro,mx,my,mz,en,bx,by,bz (be sure of variable order)
+// Do NOT change
 
 namespace global
 {

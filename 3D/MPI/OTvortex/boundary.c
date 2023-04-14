@@ -18,9 +18,10 @@
 #include <stdlib.h>
 #include "mpi.h"
 
-#define PRDC_X (1)		/* Set 1 for periodic in X */
-#define PRDC_Y (1)		/* Set 1 for periodic in Y */
-#define PRDC_Z (1)		/* Set 1 for periodic in Z */
+/* Boundary condition flag, defined in global.hpp */
+extern int dnxs[8];
+extern int dnys[8];
+extern int dnzs[8];
 
 void mpi_sdrv3d(double *f[], int nn, int nx, int ny, int nz, int xoff, int yoff, int zoff,
 		int mpi_rank, int mpi_numx, int mpi_numy, int mpi_numz);
@@ -42,15 +43,16 @@ void mpi_sdrv3d(double *f[], int nn, int nx, int ny, int nz, int xoff, int yoff,
   int ntot,ntot2;
   MPI_Status r_stat;
   double *fold,*fcpy;
+  int dnx=dnxs[0],dny=dnys[0],dnz=dnzs[0];
 
   /* XBC */
-#if (PRDC_X)
-  rankl=(((mpi_rank%m_xy)%mpi_numx) == 0)?(mpi_rank+(mpi_numx-1)):(mpi_rank-1);
-  rankh=(((mpi_rank%m_xy)%mpi_numx) == (mpi_numx-1))?(mpi_rank-(mpi_numx-1)):(mpi_rank+1);
-#else
-  rankl=(((mpi_rank%m_xy)%mpi_numx) == 0)?(MPI_PROC_NULL):(mpi_rank-1);
-  rankh=(((mpi_rank%m_xy)%mpi_numx) == (mpi_numx-1))?(MPI_PROC_NULL):(mpi_rank+1);
-#endif  
+  if (dnx == 0){
+    rankl=(((mpi_rank%m_xy)%mpi_numx) == 0)?(mpi_rank+(mpi_numx-1)):(mpi_rank-1);
+    rankh=(((mpi_rank%m_xy)%mpi_numx) == (mpi_numx-1))?(mpi_rank-(mpi_numx-1)):(mpi_rank+1);
+  } else{
+    rankl=(((mpi_rank%m_xy)%mpi_numx) == 0)?(MPI_PROC_NULL):(mpi_rank-1);
+    rankh=(((mpi_rank%m_xy)%mpi_numx) == (mpi_numx-1))?(MPI_PROC_NULL):(mpi_rank+1);
+  }
   if (mpi_numx != 1){
     ntot=nn*ny*nz*xoff;
     ntot2=ntot*2;
@@ -87,29 +89,29 @@ void mpi_sdrv3d(double *f[], int nn, int nx, int ny, int nz, int xoff, int yoff,
     free(fold);
     free(fcpy);
   } else{
-#if (PRDC_X)
-    /* Periodic. avoid communication to myself */
-    for (n=0;n<nn;n++){
-      for (k=0;k<nz;k++){
-	for (j=0;j<ny;j++){
-	  for (i=0;i<xoff;i++){
-	    f[n][nx*(ny*k+j)+(nx-1-i)]=f[n][nx*(ny*k+j)+(2*xoff-1-i)];
-	    f[n][nx*(ny*k+j)+i]=f[n][nx*(ny*k+j)+(nx-2*xoff+i)];
+    if (dnx == 0){
+      /* Periodic. avoid communication to myself */
+      for (n=0;n<nn;n++){
+	for (k=0;k<nz;k++){
+	  for (j=0;j<ny;j++){
+	    for (i=0;i<xoff;i++){
+	      f[n][nx*(ny*k+j)+(nx-1-i)]=f[n][nx*(ny*k+j)+(2*xoff-1-i)];
+	      f[n][nx*(ny*k+j)+i]=f[n][nx*(ny*k+j)+(nx-2*xoff+i)];
+	    }
 	  }
 	}
       }
     }
-#endif
   }
   
   /* YBC */
-#if (PRDC_Y)
-  rankl=(((mpi_rank%m_xy)/mpi_numx) == 0)?(mpi_rank+mpi_numx*(mpi_numy-1)):(mpi_rank-mpi_numx);
-  rankh=(((mpi_rank%m_xy)/mpi_numx) == (mpi_numy-1))?(mpi_rank-mpi_numx*(mpi_numy-1)):(mpi_rank+mpi_numx);
-#else
-  rankl=(((mpi_rank%m_xy)/mpi_numx) == 0)?(MPI_PROC_NULL):(mpi_rank-mpi_numx);
-  rankh=(((mpi_rank%m_xy)/mpi_numx) == (mpi_numy-1))?(MPI_PROC_NULL):(mpi_rank+mpi_numx);
-#endif
+  if (dny == 0){
+    rankl=(((mpi_rank%m_xy)/mpi_numx) == 0)?(mpi_rank+mpi_numx*(mpi_numy-1)):(mpi_rank-mpi_numx);
+    rankh=(((mpi_rank%m_xy)/mpi_numx) == (mpi_numy-1))?(mpi_rank-mpi_numx*(mpi_numy-1)):(mpi_rank+mpi_numx);
+  } else{
+    rankl=(((mpi_rank%m_xy)/mpi_numx) == 0)?(MPI_PROC_NULL):(mpi_rank-mpi_numx);
+    rankh=(((mpi_rank%m_xy)/mpi_numx) == (mpi_numy-1))?(MPI_PROC_NULL):(mpi_rank+mpi_numx);
+  }
   if (mpi_numy != 1){
     ntot=nn*nz*nx*yoff;
     ntot2=ntot*2;
@@ -146,29 +148,29 @@ void mpi_sdrv3d(double *f[], int nn, int nx, int ny, int nz, int xoff, int yoff,
     free(fold);
     free(fcpy);
   } else{
-#if (PRDC_Y)
-    /* Periodic. avoid communication to myself */
-    for (n=0;n<nn;n++){
-      for (k=0;k<nz;k++){
-	for (j=0;j<yoff;j++){
-	  for (i=0;i<nx;i++){
-	    f[n][nx*(ny*k+(ny-1-j))+i]=f[n][nx*(ny*k+(2*yoff-1-j))+i];
-	    f[n][nx*(ny*k+j)+i]=f[n][nx*(ny*k+(ny-2*yoff+j))+i];
+    if (dny == 0){
+      /* Periodic. avoid communication to myself */
+      for (n=0;n<nn;n++){
+	for (k=0;k<nz;k++){
+	  for (j=0;j<yoff;j++){
+	    for (i=0;i<nx;i++){
+	      f[n][nx*(ny*k+(ny-1-j))+i]=f[n][nx*(ny*k+(2*yoff-1-j))+i];
+	      f[n][nx*(ny*k+j)+i]=f[n][nx*(ny*k+(ny-2*yoff+j))+i];
+	    }
 	  }
 	}
       }
     }
-#endif
   }
 
   /* ZBC */
-#if (PRDC_Z)
-  rankl=((mpi_rank/m_xy) == 0)?(mpi_rank+m_xy*(mpi_numz-1)):(mpi_rank-m_xy);
-  rankh=((mpi_rank/m_xy) == (mpi_numz-1))?(mpi_rank-m_xy*(mpi_numz-1)):(mpi_rank+m_xy);
-#else
-  rankl=((mpi_rank/m_xy) == 0)?(MPI_PROC_NULL):(mpi_rank-m_xy);
-  rankh=((mpi_rank/m_xy) == (mpi_numz-1))?(MPI_PROC_NULL):(mpi_rank+m_xy);
-#endif
+  if (dnz == 0){
+    rankl=((mpi_rank/m_xy) == 0)?(mpi_rank+m_xy*(mpi_numz-1)):(mpi_rank-m_xy);
+    rankh=((mpi_rank/m_xy) == (mpi_numz-1))?(mpi_rank-m_xy*(mpi_numz-1)):(mpi_rank+m_xy);
+  } else{
+    rankl=((mpi_rank/m_xy) == 0)?(MPI_PROC_NULL):(mpi_rank-m_xy);
+    rankh=((mpi_rank/m_xy) == (mpi_numz-1))?(MPI_PROC_NULL):(mpi_rank+m_xy);
+  }
   if (mpi_numz != 1){
     ntot=nn*nx*ny*zoff;
     ntot2=ntot*2;
@@ -205,19 +207,19 @@ void mpi_sdrv3d(double *f[], int nn, int nx, int ny, int nz, int xoff, int yoff,
     free(fold);
     free(fcpy);
   } else{
-#if (PRDC_Z)
-    /* Periodic. avoid communication to myself */
-    for (n=0;n<nn;n++){
-      for (k=0;k<zoff;k++){
-	for (j=0;j<ny;j++){
-	  for (i=0;i<nx;i++){
-	    f[n][nx*(ny*(nz-1-k)+j)+i]=f[n][nx*(ny*(2*zoff-1-k)+j)+i];
-	    f[n][nx*(ny*k+j)+i]=f[n][nx*(ny*(nz-2*zoff+k)+j)+i];
+    if (dnz == 0){
+      /* Periodic. avoid communication to myself */
+      for (n=0;n<nn;n++){
+	for (k=0;k<zoff;k++){
+	  for (j=0;j<ny;j++){
+	    for (i=0;i<nx;i++){
+	      f[n][nx*(ny*(nz-1-k)+j)+i]=f[n][nx*(ny*(2*zoff-1-k)+j)+i];
+	      f[n][nx*(ny*k+j)+i]=f[n][nx*(ny*(nz-2*zoff+k)+j)+i];
+	    }
 	  }
 	}
       }
     }
-#endif
   }
 
 }
@@ -228,7 +230,7 @@ void mpi_xbc3d(double *f, int nx, int ny, int nz, int xoff, int yoff, int zoff, 
 /* st: Flag for staggered grid. Set 1 when f is @ cell face (not center) */
 /* dn: Factor of Dirichlet (-1) or Neumann (+1). if dn==0, nothing to do */
 {
-  if (dn != 0 && PRDC_X == 0){
+  if (dn != 0){
     unsigned long i,j,k;
     int m_xy=mpi_numx*mpi_numy;
     /* Left */
@@ -256,7 +258,7 @@ void mpi_ybc3d(double *f, int nx, int ny, int nz, int xoff, int yoff, int zoff, 
 /* st: Flag for staggered grid. Set 1 when f is @ cell face (not center) */
 /* dn: Factor of Dirichlet (-1) or Neumann (+1). if dn==0, nothing to do */
 {
-  if (dn != 0 && PRDC_Y == 0){
+  if (dn != 0){
     unsigned long i,j,k;
     int m_xy=mpi_numx*mpi_numy;
     /* Left */
@@ -284,7 +286,7 @@ void mpi_zbc3d(double *f, int nx, int ny, int nz, int xoff, int yoff, int zoff, 
 /* st: Flag for staggered grid. Set 1 when f is @ cell face (not center) */
 /* dn: Factor of Dirichlet (-1) or Neumann (+1). if dn==0, nothing to do */
 {
-  if (dn != 0 && PRDC_Z == 0){
+  if (dn != 0){
     unsigned long i,j,k;
     int m_xy=mpi_numx*mpi_numy;
     /* Left */

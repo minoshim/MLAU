@@ -87,6 +87,15 @@ inline double calc_df(const double *f)
 #endif
 }
 
+/* Boundary condition flag, defined in global.hpp */
+extern int dnxs[8];
+extern int dnys[8];
+extern int dnzs[8];
+/* Staggered grid flag, defined in global.hpp */
+extern int stxs[8];
+extern int stys[8];
+extern int stzs[8];
+
 void mhd_fd_ct_3d(double *ro, double *mx, double *my, double *mz,
 		  double *en, double *bx, double *by, double *bz,
 		  double dt, double dx, double dy, double dz,
@@ -217,15 +226,15 @@ void mhd_fd_ct_3d(double *ro, double *mx, double *my, double *mz,
 	p[1]=cy;
 	p[2]=cz;
 	mpi_sdrv3d(p,3,nx,ny,nz,xoff,yoff,zoff,mpi_rank,mpi_numx,mpi_numy,mpi_numz);
-	mpi_xbc3d(&cx[0],nx,ny,nz,xoff,yoff,zoff,0,+0,mpi_rank,mpi_numx,mpi_numy,mpi_numz);
-	mpi_xbc3d(&cy[0],nx,ny,nz,xoff,yoff,zoff,0,+0,mpi_rank,mpi_numx,mpi_numy,mpi_numz);
-	mpi_xbc3d(&cz[0],nx,ny,nz,xoff,yoff,zoff,0,+0,mpi_rank,mpi_numx,mpi_numy,mpi_numz);
-	mpi_ybc3d(&cx[0],nx,ny,nz,xoff,yoff,zoff,0,+0,mpi_rank,mpi_numx,mpi_numy,mpi_numz);
-	mpi_ybc3d(&cy[0],nx,ny,nz,xoff,yoff,zoff,0,+0,mpi_rank,mpi_numx,mpi_numy,mpi_numz);
-	mpi_ybc3d(&cz[0],nx,ny,nz,xoff,yoff,zoff,0,+0,mpi_rank,mpi_numx,mpi_numy,mpi_numz);
-	mpi_zbc3d(&cx[0],nx,ny,nz,xoff,yoff,zoff,0,+0,mpi_rank,mpi_numx,mpi_numy,mpi_numz);
-	mpi_zbc3d(&cy[0],nx,ny,nz,xoff,yoff,zoff,0,+0,mpi_rank,mpi_numx,mpi_numy,mpi_numz);
-	mpi_zbc3d(&cz[0],nx,ny,nz,xoff,yoff,zoff,0,+0,mpi_rank,mpi_numx,mpi_numy,mpi_numz);
+	mpi_xbc3d(p[0],nx,ny,nz,xoff,yoff,zoff,0,dnxs[5],mpi_rank,mpi_numx,mpi_numy,mpi_numz);
+	mpi_xbc3d(p[1],nx,ny,nz,xoff,yoff,zoff,0,dnxs[6],mpi_rank,mpi_numx,mpi_numy,mpi_numz);
+	mpi_xbc3d(p[2],nx,ny,nz,xoff,yoff,zoff,0,dnxs[7],mpi_rank,mpi_numx,mpi_numy,mpi_numz);
+	mpi_ybc3d(p[0],nx,ny,nz,xoff,yoff,zoff,0,dnys[5],mpi_rank,mpi_numx,mpi_numy,mpi_numz);
+	mpi_ybc3d(p[1],nx,ny,nz,xoff,yoff,zoff,0,dnys[6],mpi_rank,mpi_numx,mpi_numy,mpi_numz);
+	mpi_ybc3d(p[2],nx,ny,nz,xoff,yoff,zoff,0,dnys[7],mpi_rank,mpi_numx,mpi_numy,mpi_numz);
+	mpi_zbc3d(p[0],nx,ny,nz,xoff,yoff,zoff,0,dnzs[5],mpi_rank,mpi_numx,mpi_numy,mpi_numz);
+	mpi_zbc3d(p[1],nx,ny,nz,xoff,yoff,zoff,0,dnzs[6],mpi_rank,mpi_numx,mpi_numy,mpi_numz);
+	mpi_zbc3d(p[2],nx,ny,nz,xoff,yoff,zoff,0,dnzs[7],mpi_rank,mpi_numx,mpi_numy,mpi_numz);
       }
 
       /* Primitive variable at cell center */
@@ -356,15 +365,15 @@ void mhd_fd_ct_3d(double *ro, double *mx, double *my, double *mz,
 	p[1]=dvy;
 	p[2]=dvz;
 	mpi_sdrv3d(p,3,nx,ny,nz,xoff,yoff,zoff,mpi_rank,mpi_numx,mpi_numy,mpi_numz);
-	mpi_xbc3d(&dvx[0],nx,ny,nz,xoff,yoff,zoff,0,+0,mpi_rank,mpi_numx,mpi_numy,mpi_numz);
-	mpi_xbc3d(&dvy[0],nx,ny,nz,xoff,yoff,zoff,0,+0,mpi_rank,mpi_numx,mpi_numy,mpi_numz);
-	mpi_xbc3d(&dvz[0],nx,ny,nz,xoff,yoff,zoff,0,+0,mpi_rank,mpi_numx,mpi_numy,mpi_numz);
-	mpi_ybc3d(&dvx[0],nx,ny,nz,xoff,yoff,zoff,0,+0,mpi_rank,mpi_numx,mpi_numy,mpi_numz);
-	mpi_ybc3d(&dvy[0],nx,ny,nz,xoff,yoff,zoff,0,+0,mpi_rank,mpi_numx,mpi_numy,mpi_numz);
-	mpi_ybc3d(&dvz[0],nx,ny,nz,xoff,yoff,zoff,0,+0,mpi_rank,mpi_numx,mpi_numy,mpi_numz);
-	mpi_zbc3d(&dvx[0],nx,ny,nz,xoff,yoff,zoff,0,+0,mpi_rank,mpi_numx,mpi_numy,mpi_numz);
-	mpi_zbc3d(&dvy[0],nx,ny,nz,xoff,yoff,zoff,0,+0,mpi_rank,mpi_numx,mpi_numy,mpi_numz);
-	mpi_zbc3d(&dvz[0],nx,ny,nz,xoff,yoff,zoff,0,+0,mpi_rank,mpi_numx,mpi_numy,mpi_numz);
+	mpi_xbc3d(p[0],nx,ny,nz,xoff,yoff,zoff,0,-dnxs[1],mpi_rank,mpi_numx,mpi_numy,mpi_numz);
+	mpi_xbc3d(p[1],nx,ny,nz,xoff,yoff,zoff,0,+dnxs[2],mpi_rank,mpi_numx,mpi_numy,mpi_numz);
+	mpi_xbc3d(p[2],nx,ny,nz,xoff,yoff,zoff,0,+dnxs[3],mpi_rank,mpi_numx,mpi_numy,mpi_numz);
+	mpi_ybc3d(p[0],nx,ny,nz,xoff,yoff,zoff,0,+dnys[1],mpi_rank,mpi_numx,mpi_numy,mpi_numz);
+	mpi_ybc3d(p[1],nx,ny,nz,xoff,yoff,zoff,0,-dnys[2],mpi_rank,mpi_numx,mpi_numy,mpi_numz);
+	mpi_ybc3d(p[2],nx,ny,nz,xoff,yoff,zoff,0,+dnys[3],mpi_rank,mpi_numx,mpi_numy,mpi_numz);
+	mpi_zbc3d(p[0],nx,ny,nz,xoff,yoff,zoff,0,+dnzs[1],mpi_rank,mpi_numx,mpi_numy,mpi_numz);
+	mpi_zbc3d(p[1],nx,ny,nz,xoff,yoff,zoff,0,+dnzs[2],mpi_rank,mpi_numx,mpi_numy,mpi_numz);
+	mpi_zbc3d(p[2],nx,ny,nz,xoff,yoff,zoff,0,-dnzs[3],mpi_rank,mpi_numx,mpi_numy,mpi_numz);
       }
       
       /* Calculate numerical flux at cell face along X */
@@ -1154,35 +1163,16 @@ void mhd_fd_ct_3d(double *ro, double *mx, double *my, double *mz,
     p[1]=mx;
     p[2]=my;
     p[3]=mz;
-    p[4]=bx;
-    p[5]=by;
-    p[6]=bz;
-    p[7]=en;
+    p[4]=en;
+    p[5]=bx;
+    p[6]=by;
+    p[7]=bz;
     mpi_sdrv3d(p,8,nx,ny,nz,xoff,yoff,zoff,mpi_rank,mpi_numx,mpi_numy,mpi_numz);
-    mpi_xbc3d(&ro[0],nx,ny,nz,xoff,yoff,zoff,0,+0,mpi_rank,mpi_numx,mpi_numy,mpi_numz);
-    mpi_xbc3d(&mx[0],nx,ny,nz,xoff,yoff,zoff,0,+0,mpi_rank,mpi_numx,mpi_numy,mpi_numz);
-    mpi_xbc3d(&my[0],nx,ny,nz,xoff,yoff,zoff,0,+0,mpi_rank,mpi_numx,mpi_numy,mpi_numz);
-    mpi_xbc3d(&mz[0],nx,ny,nz,xoff,yoff,zoff,0,+0,mpi_rank,mpi_numx,mpi_numy,mpi_numz);
-    mpi_xbc3d(&en[0],nx,ny,nz,xoff,yoff,zoff,0,+0,mpi_rank,mpi_numx,mpi_numy,mpi_numz);
-    mpi_xbc3d(&bx[0],nx,ny,nz,xoff,yoff,zoff,1,+0,mpi_rank,mpi_numx,mpi_numy,mpi_numz);
-    mpi_xbc3d(&by[0],nx,ny,nz,xoff,yoff,zoff,0,+0,mpi_rank,mpi_numx,mpi_numy,mpi_numz);
-    mpi_xbc3d(&bz[0],nx,ny,nz,xoff,yoff,zoff,0,+0,mpi_rank,mpi_numx,mpi_numy,mpi_numz);
-    mpi_ybc3d(&ro[0],nx,ny,nz,xoff,yoff,zoff,0,+0,mpi_rank,mpi_numx,mpi_numy,mpi_numz);
-    mpi_ybc3d(&mx[0],nx,ny,nz,xoff,yoff,zoff,0,+0,mpi_rank,mpi_numx,mpi_numy,mpi_numz);
-    mpi_ybc3d(&my[0],nx,ny,nz,xoff,yoff,zoff,0,+0,mpi_rank,mpi_numx,mpi_numy,mpi_numz);
-    mpi_ybc3d(&mz[0],nx,ny,nz,xoff,yoff,zoff,0,+0,mpi_rank,mpi_numx,mpi_numy,mpi_numz);
-    mpi_ybc3d(&en[0],nx,ny,nz,xoff,yoff,zoff,0,+0,mpi_rank,mpi_numx,mpi_numy,mpi_numz);
-    mpi_ybc3d(&bx[0],nx,ny,nz,xoff,yoff,zoff,0,+0,mpi_rank,mpi_numx,mpi_numy,mpi_numz);
-    mpi_ybc3d(&by[0],nx,ny,nz,xoff,yoff,zoff,1,+0,mpi_rank,mpi_numx,mpi_numy,mpi_numz);
-    mpi_ybc3d(&bz[0],nx,ny,nz,xoff,yoff,zoff,0,+0,mpi_rank,mpi_numx,mpi_numy,mpi_numz);
-    mpi_zbc3d(&ro[0],nx,ny,nz,xoff,yoff,zoff,0,+0,mpi_rank,mpi_numx,mpi_numy,mpi_numz);
-    mpi_zbc3d(&mx[0],nx,ny,nz,xoff,yoff,zoff,0,+0,mpi_rank,mpi_numx,mpi_numy,mpi_numz);
-    mpi_zbc3d(&my[0],nx,ny,nz,xoff,yoff,zoff,0,+0,mpi_rank,mpi_numx,mpi_numy,mpi_numz);
-    mpi_zbc3d(&mz[0],nx,ny,nz,xoff,yoff,zoff,0,+0,mpi_rank,mpi_numx,mpi_numy,mpi_numz);
-    mpi_zbc3d(&en[0],nx,ny,nz,xoff,yoff,zoff,0,+0,mpi_rank,mpi_numx,mpi_numy,mpi_numz);
-    mpi_zbc3d(&bx[0],nx,ny,nz,xoff,yoff,zoff,0,+0,mpi_rank,mpi_numx,mpi_numy,mpi_numz);
-    mpi_zbc3d(&by[0],nx,ny,nz,xoff,yoff,zoff,0,+0,mpi_rank,mpi_numx,mpi_numy,mpi_numz);
-    mpi_zbc3d(&bz[0],nx,ny,nz,xoff,yoff,zoff,1,+0,mpi_rank,mpi_numx,mpi_numy,mpi_numz);
+    for (int n=0;n<8;n++){
+      mpi_xbc3d(p[n],nx,ny,nz,xoff,yoff,zoff,stxs[n],dnxs[n],mpi_rank,mpi_numx,mpi_numy,mpi_numz);
+      mpi_ybc3d(p[n],nx,ny,nz,xoff,yoff,zoff,stys[n],dnys[n],mpi_rank,mpi_numx,mpi_numy,mpi_numz);
+      mpi_zbc3d(p[n],nx,ny,nz,xoff,yoff,zoff,stzs[n],dnzs[n],mpi_rank,mpi_numx,mpi_numy,mpi_numz);
+    }
   }
   
   free(ut);
