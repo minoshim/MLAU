@@ -122,6 +122,13 @@ inline double calc_df(const double *f)
 #endif
 }
 
+/* Boundary condition flag, defined in global.hpp */
+extern int dnxs[8];
+extern int dnys[8];
+/* Staggered grid flag, defined in global.hpp */
+extern int stxs[8];
+extern int stys[8];
+
 void mhd_fd_ct_2d(double *ro, double *mx, double *my, double *mz,
 		  double *en, double *bx, double *by, double *bz,
 		  double dt, double dx, double dy,
@@ -235,10 +242,10 @@ void mhd_fd_ct_2d(double *ro, double *mx, double *my, double *mz,
 	p[0]=cx;
 	p[1]=cy;
 	mpi_sdrv2d(p,2,nx,ny,xoff,yoff,mpi_rank,mpi_numx,mpi_numy);
-	mpi_xbc2d(&cx[0],nx,ny,xoff,yoff,0,+0,mpi_rank,mpi_numx,mpi_numy);
-	mpi_xbc2d(&cy[0],nx,ny,xoff,yoff,0,+0,mpi_rank,mpi_numx,mpi_numy);
-	mpi_ybc2d(&cx[0],nx,ny,xoff,yoff,0,+1,mpi_rank,mpi_numx,mpi_numy);
-	mpi_ybc2d(&cy[0],nx,ny,xoff,yoff,0,-1,mpi_rank,mpi_numx,mpi_numy);
+	mpi_xbc2d(p[0],nx,ny,xoff,yoff,0,dnxs[5],mpi_rank,mpi_numx,mpi_numy);
+	mpi_xbc2d(p[1],nx,ny,xoff,yoff,0,dnxs[6],mpi_rank,mpi_numx,mpi_numy);
+	mpi_ybc2d(p[0],nx,ny,xoff,yoff,0,dnys[5],mpi_rank,mpi_numx,mpi_numy);
+	mpi_ybc2d(p[1],nx,ny,xoff,yoff,0,dnys[6],mpi_rank,mpi_numx,mpi_numy);
       }
 
       /* Primitive variable at cell center */
@@ -310,10 +317,10 @@ void mhd_fd_ct_2d(double *ro, double *mx, double *my, double *mz,
 	p[0]=dvx;
 	p[1]=dvy;
 	mpi_sdrv2d(p,2,nx,ny,xoff,yoff,mpi_rank,mpi_numx,mpi_numy);
-	mpi_xbc2d(&dvx[0],nx,ny,xoff,yoff,0,+0,mpi_rank,mpi_numx,mpi_numy);
-	mpi_xbc2d(&dvy[0],nx,ny,xoff,yoff,0,+0,mpi_rank,mpi_numx,mpi_numy);
-	mpi_ybc2d(&dvx[0],nx,ny,xoff,yoff,0,+1,mpi_rank,mpi_numx,mpi_numy);
-	mpi_ybc2d(&dvy[0],nx,ny,xoff,yoff,0,+1,mpi_rank,mpi_numx,mpi_numy);
+	mpi_xbc2d(p[0],nx,ny,xoff,yoff,0,-dnxs[1],mpi_rank,mpi_numx,mpi_numy);
+	mpi_xbc2d(p[1],nx,ny,xoff,yoff,0,+dnxs[2],mpi_rank,mpi_numx,mpi_numy);
+	mpi_ybc2d(p[0],nx,ny,xoff,yoff,0,+dnys[1],mpi_rank,mpi_numx,mpi_numy);
+	mpi_ybc2d(p[1],nx,ny,xoff,yoff,0,-dnys[2],mpi_rank,mpi_numx,mpi_numy);
       }
 
       /* Primitive variable at cell face along X */
@@ -684,27 +691,15 @@ void mhd_fd_ct_2d(double *ro, double *mx, double *my, double *mz,
     p[1]=mx;
     p[2]=my;
     p[3]=mz;
-    p[4]=bx;
-    p[5]=by;
-    p[6]=bz;
-    p[7]=en;
+    p[4]=en;
+    p[5]=bx;
+    p[6]=by;
+    p[7]=bz;
     mpi_sdrv2d(p,8,nx,ny,xoff,yoff,mpi_rank,mpi_numx,mpi_numy);
-    mpi_xbc2d(&ro[0],nx,ny,xoff,yoff,0,+0,mpi_rank,mpi_numx,mpi_numy);
-    mpi_xbc2d(&mx[0],nx,ny,xoff,yoff,0,+0,mpi_rank,mpi_numx,mpi_numy);
-    mpi_xbc2d(&my[0],nx,ny,xoff,yoff,0,+0,mpi_rank,mpi_numx,mpi_numy);
-    mpi_xbc2d(&mz[0],nx,ny,xoff,yoff,0,+0,mpi_rank,mpi_numx,mpi_numy);
-    mpi_xbc2d(&en[0],nx,ny,xoff,yoff,0,+0,mpi_rank,mpi_numx,mpi_numy);
-    mpi_xbc2d(&bx[0],nx,ny,xoff,yoff,1,+0,mpi_rank,mpi_numx,mpi_numy);
-    mpi_xbc2d(&by[0],nx,ny,xoff,yoff,0,+0,mpi_rank,mpi_numx,mpi_numy);
-    mpi_xbc2d(&bz[0],nx,ny,xoff,yoff,0,+0,mpi_rank,mpi_numx,mpi_numy);
-    mpi_ybc2d(&ro[0],nx,ny,xoff,yoff,0,+1,mpi_rank,mpi_numx,mpi_numy);
-    mpi_ybc2d(&mx[0],nx,ny,xoff,yoff,0,+1,mpi_rank,mpi_numx,mpi_numy);
-    mpi_ybc2d(&my[0],nx,ny,xoff,yoff,0,-1,mpi_rank,mpi_numx,mpi_numy);
-    mpi_ybc2d(&mz[0],nx,ny,xoff,yoff,0,+1,mpi_rank,mpi_numx,mpi_numy);
-    mpi_ybc2d(&en[0],nx,ny,xoff,yoff,0,+1,mpi_rank,mpi_numx,mpi_numy);
-    mpi_ybc2d(&bx[0],nx,ny,xoff,yoff,0,+1,mpi_rank,mpi_numx,mpi_numy);
-    mpi_ybc2d(&by[0],nx,ny,xoff,yoff,1,-1,mpi_rank,mpi_numx,mpi_numy);
-    mpi_ybc2d(&bz[0],nx,ny,xoff,yoff,0,+1,mpi_rank,mpi_numx,mpi_numy);
+    for (int n=0;n<8;n++){
+      mpi_xbc2d(p[n],nx,ny,xoff,yoff,stxs[n],dnxs[n],mpi_rank,mpi_numx,mpi_numy);
+      mpi_ybc2d(p[n],nx,ny,xoff,yoff,stys[n],dnys[n],mpi_rank,mpi_numx,mpi_numy);
+    }
   }
 
   free(ut);
@@ -936,17 +931,15 @@ void diff_ctfield_e(double *en, double *bx, double *by, double *bz,
     p[1]=by;
     p[2]=bz;
     mpi_sdrv2d(p,3,nx,ny,xoff,yoff,mpi_rank,mpi_numx,mpi_numy);
-    mpi_xbc2d(bx,nx,ny,xoff,yoff,1,+0,mpi_rank,mpi_numx,mpi_numy);
-    mpi_xbc2d(by,nx,ny,xoff,yoff,0,+0,mpi_rank,mpi_numx,mpi_numy);
-    mpi_xbc2d(bz,nx,ny,xoff,yoff,0,+0,mpi_rank,mpi_numx,mpi_numy);
-    mpi_ybc2d(bx,nx,ny,xoff,yoff,0,+1,mpi_rank,mpi_numx,mpi_numy);
-    mpi_ybc2d(by,nx,ny,xoff,yoff,1,-1,mpi_rank,mpi_numx,mpi_numy);
-    mpi_ybc2d(bz,nx,ny,xoff,yoff,0,+1,mpi_rank,mpi_numx,mpi_numy);
+    for (int n=0;n<3;n++){
+      mpi_xbc2d(p[n],nx,ny,xoff,yoff,stxs[5+n],dnxs[5+n],mpi_rank,mpi_numx,mpi_numy);
+      mpi_ybc2d(p[n],nx,ny,xoff,yoff,stys[5+n],dnys[5+n],mpi_rank,mpi_numx,mpi_numy);
+    }
   }
   p[0]=en;
   mpi_sdrv2d(p,1,nx,ny,xoff,yoff,mpi_rank,mpi_numx,mpi_numy);
-  mpi_xbc2d(en,nx,ny,xoff,yoff,0,+0,mpi_rank,mpi_numx,mpi_numy);
-  mpi_ybc2d(en,nx,ny,xoff,yoff,0,+1,mpi_rank,mpi_numx,mpi_numy);
+  mpi_xbc2d(p[0],nx,ny,xoff,yoff,stxs[4],dnxs[4],mpi_rank,mpi_numx,mpi_numy);
+  mpi_ybc2d(p[0],nx,ny,xoff,yoff,stys[4],dnys[4],mpi_rank,mpi_numx,mpi_numy);
 
   free(ut);
   free(fx);
@@ -1154,17 +1147,15 @@ void ns_viscous_2d(const double *ro, double *mx, double *my, double *mz,
     p[1]=my;
     p[2]=mz;
     mpi_sdrv2d(p,3,nx,ny,xoff,yoff,mpi_rank,mpi_numx,mpi_numy);
-    mpi_xbc2d(mx,nx,ny,xoff,yoff,0,+0,mpi_rank,mpi_numx,mpi_numy);
-    mpi_xbc2d(my,nx,ny,xoff,yoff,0,+0,mpi_rank,mpi_numx,mpi_numy);
-    mpi_xbc2d(mz,nx,ny,xoff,yoff,0,+0,mpi_rank,mpi_numx,mpi_numy);
-    mpi_ybc2d(mx,nx,ny,xoff,yoff,0,+1,mpi_rank,mpi_numx,mpi_numy);
-    mpi_ybc2d(my,nx,ny,xoff,yoff,0,-1,mpi_rank,mpi_numx,mpi_numy);
-    mpi_ybc2d(mz,nx,ny,xoff,yoff,0,+1,mpi_rank,mpi_numx,mpi_numy);
+    for (int n=0;n<3;n++){
+      mpi_xbc2d(p[n],nx,ny,xoff,yoff,stxs[1+n],dnxs[1+n],mpi_rank,mpi_numx,mpi_numy);
+      mpi_ybc2d(p[n],nx,ny,xoff,yoff,stys[1+n],dnys[1+n],mpi_rank,mpi_numx,mpi_numy);
+    }
   }
   p[0]=en;
   mpi_sdrv2d(p,1,nx,ny,xoff,yoff,mpi_rank,mpi_numx,mpi_numy);
-  mpi_xbc2d(en,nx,ny,xoff,yoff,0,+0,mpi_rank,mpi_numx,mpi_numy);
-  mpi_ybc2d(en,nx,ny,xoff,yoff,0,+1,mpi_rank,mpi_numx,mpi_numy);
+  mpi_xbc2d(p[0],nx,ny,xoff,yoff,stxs[4],dnxs[4],mpi_rank,mpi_numx,mpi_numy);
+  mpi_ybc2d(p[0],nx,ny,xoff,yoff,stys[4],dnys[4],mpi_rank,mpi_numx,mpi_numy);
     
   /* Return */
   for (j=0;j<ny;j++){
@@ -1223,8 +1214,8 @@ void mhd_e2p(const double *ro, const double *mx, const double *my, const double 
     }
   }
   mpi_sdrv2d(&en,1,nx,ny,xoff,yoff,mpi_rank,mpi_numx,mpi_numy);
-  mpi_xbc2d(en,nx,ny,xoff,yoff,0,+0,mpi_rank,mpi_numx,mpi_numy);
-  mpi_ybc2d(en,nx,ny,xoff,yoff,0,+1,mpi_rank,mpi_numx,mpi_numy);
+  mpi_xbc2d(en,nx,ny,xoff,yoff,stxs[4],dnxs[4],mpi_rank,mpi_numx,mpi_numy);
+  mpi_ybc2d(en,nx,ny,xoff,yoff,stys[4],dnys[4],mpi_rank,mpi_numx,mpi_numy);
 }
 
 void diffusion2d_ani(double *f, const double *g,
@@ -1431,12 +1422,12 @@ void t_conduction(const double *ro, const double *mx, const double *my, const do
   p[1]=kyy;
   p[2]=kxy;
   mpi_sdrv2d(p,3,nx,ny,xoff,yoff,mpi_rank,mpi_numx,mpi_numy);
-  mpi_xbc2d(kxx,nx,ny,xoff,yoff,0,+0,mpi_rank,mpi_numx,mpi_numy);
-  mpi_xbc2d(kyy,nx,ny,xoff,yoff,0,+0,mpi_rank,mpi_numx,mpi_numy);
-  mpi_xbc2d(kxy,nx,ny,xoff,yoff,0,+0,mpi_rank,mpi_numx,mpi_numy);
-  mpi_ybc2d(kxx,nx,ny,xoff,yoff,0,+1,mpi_rank,mpi_numx,mpi_numy);
-  mpi_ybc2d(kyy,nx,ny,xoff,yoff,0,+1,mpi_rank,mpi_numx,mpi_numy);
-  mpi_ybc2d(kxy,nx,ny,xoff,yoff,0,-1,mpi_rank,mpi_numx,mpi_numy);
+  mpi_xbc2d(p[0],nx,ny,xoff,yoff,0,dnxs[5]*dnxs[5],mpi_rank,mpi_numx,mpi_numy);
+  mpi_xbc2d(p[1],nx,ny,xoff,yoff,0,dnxs[6]*dnxs[6],mpi_rank,mpi_numx,mpi_numy);
+  mpi_xbc2d(p[2],nx,ny,xoff,yoff,0,dnxs[5]*dnxs[6],mpi_rank,mpi_numx,mpi_numy);
+  mpi_ybc2d(p[0],nx,ny,xoff,yoff,0,dnys[5]*dnys[5],mpi_rank,mpi_numx,mpi_numy);
+  mpi_ybc2d(p[1],nx,ny,xoff,yoff,0,dnys[6]*dnys[6],mpi_rank,mpi_numx,mpi_numy);
+  mpi_ybc2d(p[2],nx,ny,xoff,yoff,0,dnys[5]*dnys[6],mpi_rank,mpi_numx,mpi_numy);
 
   /* Energy => Pressure */
   mhd_e2p(ro,mx,my,mz,en,bx,by,bz,nx,ny,xoff,yoff,gamma,+1,mpi_rank,mpi_numx,mpi_numy);

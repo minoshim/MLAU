@@ -19,6 +19,15 @@
 
 #define CFLCHECK (0)		// Flag to modify dt at every step
 
+int dnxs[8]={0,0,0,0,0,0,0,0};
+int dnys[8]={0,0,0,0,0,0,0,0};
+// Boundary condition flag for ro,mx,my,mz,en,bx,by,bz (be sure of variable order)
+// 0=Periodic, +1=Neumann, -1=Dirichlet
+int stxs[8]={0,0,0,0,0,1,0,0};
+int stys[8]={0,0,0,0,0,0,1,0};
+// Staggered grid flag for ro,mx,my,mz,en,bx,by,bz (be sure of variable order)
+// Do NOT change
+
 namespace global
 {
   // Universal parameters (fixed)
