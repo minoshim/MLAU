@@ -7,11 +7,11 @@ MPI parallel codes for the following three-dimensional MHD problems are availabl
 ```
 >cd OTvortex/
 >make
->mpiexec -np 16 -genv OMP_NUM_THREADS 2 ./a.out #for MPICH users
->mpiexec -np 16 -x OMP_NUM_THREADS=2 ./a.out    #for OpenMPI users
+>mpiexec -np 8 -genv OMP_NUM_THREADS 4 ./a.out #for MPICH users
+>mpiexec -np 8 -x OMP_NUM_THREADS=4 ./a.out    #for OpenMPI users
 ```
 
-Here `16` is the number of MPI processes and `2` is the number of OpenMP threads, thus 32 CPU cores are used for this example run.
+Here `8` is the number of MPI processes and `4` is the number of OpenMP threads, thus 32 CPU cores are used for this example run.
 
 The number of MPI processes should be equal to the value of `MNP` defined in `global.hpp` (otherwise, the simulation does not run).
 
