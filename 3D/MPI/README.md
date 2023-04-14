@@ -1,7 +1,8 @@
 ## MLAU/3D/MPI
 MPI parallel codes for the following three-dimensional MHD problems are available:
 - `OTvortex` ... Orszag-Tang vortex problem;
-- `blast` ... blast wave propagation problem.
+- `blast` ... blast wave propagation problem;
+- `loop` ... field loop advection problem.
 
 ### How to run the simulation
 ```
