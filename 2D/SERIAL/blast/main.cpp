@@ -50,7 +50,7 @@ int main(void)
     }
   }
   etim=clock();
-  printf("%f sec is required for computation.\n",(double)(etim-stim)/CLOCKS_PER_SEC);
+  printf("CPU time = %f sec.\n",(double)(etim-stim)/CLOCKS_PER_SEC);
 
   new_delete();
   return 0;
