@@ -9,8 +9,6 @@
 
 #define XMESH (256)		// Number of cells in X domain
 #define YMESH (128)		// Number of cells in Y domain
-#define XOFF (4)		// Number of ghost cells in each X side.
-#define YOFF (4)		// Number of ghost cells in each Y side.
 
 #define CFLCHECK (0)		// Flag to modify dt at every step
 
@@ -26,7 +24,8 @@ int stys[8]={0,0,0,0,0,0,1,0};
 namespace global
 {
   // Universal parameters (fixed)
-  const int nx=XMESH+2*XOFF,ny=YMESH+2*YOFF;
+  const int xoff=4,yoff=xoff;	// Number of ghost cells in each side
+  const int nx=XMESH+2*xoff,ny=YMESH+2*yoff;
   const double pi=4.0*atan(1.0);
   const double dtor=pi/180.;
 

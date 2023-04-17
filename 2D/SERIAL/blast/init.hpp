@@ -10,7 +10,7 @@ void init_grid()
   sprintf(filname,"%s/x.dat",fildir);
   outfil=fopen(filname,"w");
   for (int i=0;i<nx;i++){
-    x[i]=(i-XOFF+0.5)*dx-0.5*lx;
+    x[i]=(i-xoff+0.5)*dx-0.5*lx;
     fprintf(outfil,"%.12f\n",x[i]);
   }
   fclose(outfil);
@@ -18,7 +18,7 @@ void init_grid()
   sprintf(filname,"%s/y.dat",fildir);
   outfil=fopen(filname,"w");
   for (int j=0;j<ny;j++){
-    y[j]=(j-YOFF+0.5)*dy-0.5*ly;
+    y[j]=(j-yoff+0.5)*dy-0.5*ly;
     fprintf(outfil,"%.12f\n",y[j]);
   }
   fclose(outfil);

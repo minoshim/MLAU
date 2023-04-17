@@ -28,7 +28,7 @@ int main(void)
 
     setbc();
     mhd_fd_ct_2d(ro,mx,my,mz,en,bx,by,bz,
-    		 dt,dx,dy,nx,ny,XOFF,YOFF,gam);
+    		 dt,dx,dy,nx,ny,xoff,yoff,gam);
 
 #if (CFLCHECK)
     cflcheck(dr,&dt,0);
