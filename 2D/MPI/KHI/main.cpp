@@ -46,7 +46,7 @@ int main(int argc, char* argv[])
     tim+=dt;
 
     mhd_fd_ct_2d(ro,mx,my,mz,en,bx,by,bz,
-		 dt,dx,dy,nx,ny,XOFF,YOFF,gam,
+		 dt,dx,dy,nx,ny,xoff,yoff,gam,
 		 mpi_rank,mpi_numx,mpi_numy);
 
 #if (CFLCHECK)

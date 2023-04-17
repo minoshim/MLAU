@@ -23,8 +23,8 @@ void inj_ro(double *ro, double *mx, double *my, double *mz,
   }
 
   if ((mpi_rank / mpi_numx) == (mpi_numy-1)){
-    for (j=ny-YOFF;j<ny;j++){
-      int ctyflg=(j == (ny-YOFF));
+    for (j=ny-yoff;j<ny;j++){
+      int ctyflg=(j == (ny-yoff));
       for (i=0;i<nx;i++){
 	double vx,vy,vz,pr,b2;
 	double bxc,byc,bzc;	// Centered quantities

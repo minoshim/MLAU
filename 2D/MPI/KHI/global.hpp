@@ -10,8 +10,6 @@
 
 #define XMESH (128)		// Number of cells in X domain
 #define YMESH (128)		// Number of cells in Y domain
-#define XOFF (4)		// Number of ghost cells in each X side.
-#define YOFF (4)		// Number of ghost cells in each Y side.
 
 #define MNP_X (4)		// Number of MPI processes in X
 #define MNP_Y (4)		// Number of MPI processes in Y
@@ -32,7 +30,8 @@ int stys[8]={0,0,0,0,0,0,1,0};
 namespace global
 {
   // Universal parameters (fixed)
-  const int nx=XMESH/MNP_X+2*XOFF,ny=YMESH/MNP_Y+2*YOFF;
+  const int xoff=4,yoff=xoff;	// Number of ghost cells in each side
+  const int nx=XMESH/MNP_X+2*xoff,ny=YMESH/MNP_Y+2*yoff;
   const int mpi_numx=MNP_X;
   const int mpi_numy=MNP_Y;
   const double pi=4.0*atan(1.0);

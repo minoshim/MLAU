@@ -49,13 +49,13 @@ int main(int argc, char* argv[])
     // Set upper boundary condition 
     inj_ro(ro,mx,my,mz,en,bx,by,bz,
 	   ro_3,dro3,vy_1,bx_1,by_1,bz_1,pr_1,
-	   nx,ny,XOFF,YOFF,
+	   nx,ny,xoff,yoff,
 	   mpi_rank,mpi_numx,mpi_numy);
     double *p[8]={ro,mx,my,mz,en,bx,by,bz};
-    mpi_sdrv2d(p,8,nx,ny,XOFF,YOFF,mpi_rank,mpi_numx,mpi_numy);
+    mpi_sdrv2d(p,8,nx,ny,xoff,yoff,mpi_rank,mpi_numx,mpi_numy);
     
     mhd_fd_ct_2d(ro,mx,my,mz,en,bx,by,bz,
-		 dt,dx,dy,nx,ny,XOFF,YOFF,gam,
+		 dt,dx,dy,nx,ny,xoff,yoff,gam,
 		 mpi_rank,mpi_numx,mpi_numy);
 
 #if (CFLCHECK)
