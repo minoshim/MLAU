@@ -11,9 +11,6 @@
 #define XMESH (100)		// Number of cells in X domain
 #define YMESH (100)		// Number of cells in Y domain
 #define ZMESH (100)		// Number of cells in Z domain
-#define XOFF (4)		// Number of ghost cells in each X side.
-#define YOFF (4)		// Number of ghost cells in each Y side.
-#define ZOFF (4)		// Number of ghost cells in each Z side.
 
 #define MNP_X (2)		// Number of MPI processes in X
 #define MNP_Y (2)		// Number of MPI processes in Y
@@ -36,7 +33,8 @@ int stzs[8]={0,0,0,0,0,0,0,1};
 namespace global
 {
   // Universal parameters (fixed)
-  const int nx=XMESH/MNP_X+2*XOFF,ny=YMESH/MNP_Y+2*YOFF,nz=ZMESH/MNP_Z+2*ZOFF;
+  const int xoff=4,yoff=xoff,zoff=xoff;	// Number of ghost cells in each side
+  const int nx=XMESH/MNP_X+2*xoff,ny=YMESH/MNP_Y+2*yoff,nz=ZMESH/MNP_Z+2*zoff;
   const int mpi_numx=MNP_X;
   const int mpi_numy=MNP_Y;
   const int mpi_numz=MNP_Z;

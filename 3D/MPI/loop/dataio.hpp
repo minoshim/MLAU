@@ -24,7 +24,7 @@ void dataio(int n, int cnt, double tim, int mpi_rank)
 
       sprintf(filname,"%s/offsets.dat",fildir);
       outfil=fopen(filname,"w");
-      fprintf(outfil,"%d %d %d\n",XOFF,YOFF,ZOFF);
+      fprintf(outfil,"%d %d %d\n",xoff,yoff,zoff);
       fclose(outfil);
       
       sprintf(filname,"%s/t.dat",fildir);

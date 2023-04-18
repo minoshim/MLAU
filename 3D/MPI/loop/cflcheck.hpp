@@ -4,10 +4,10 @@ void cflcheck(double *dt, int comment)
   int i,j,k,ss;
   double vmax=vfast;
 
-  for (k=ZOFF;k<nz-ZOFF;k++){
+  for (k=zoff;k<nz-zoff;k++){
     double iro,vx,vy,vz,bxc,byc,bzc,v2,b2,pr,cf,vtmp;
-    for (j=YOFF;j<ny-YOFF;j++){
-      for (i=XOFF;i<nx-XOFF;i++){
+    for (j=yoff;j<ny-yoff;j++){
+      for (i=xoff;i<nx-xoff;i++){
 	ss=nx*(ny*k+j)+i;
 	iro=1.0/ro[ss];
 	vx=mx[ss]*iro;

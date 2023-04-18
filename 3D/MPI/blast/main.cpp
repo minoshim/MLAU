@@ -46,7 +46,7 @@ int main(int argc, char* argv[])
     tim+=dt;
 
     mhd_fd_ct_3d(ro,mx,my,mz,en,bx,by,bz,
-		 dt,dx,dy,dz,nx,ny,nz,XOFF,YOFF,ZOFF,gam,
+		 dt,dx,dy,dz,nx,ny,nz,xoff,yoff,zoff,gam,
 		 mpi_rank,mpi_numx,mpi_numy,mpi_numz);
 
 #if (CFLCHECK)

@@ -33,11 +33,11 @@ int main(int argc, char* argv[])
   init_grid(mpi_rank);
   init_plasma(mpi_rank);
   double* p[8]={ro,mx,my,mz,en,bx,by,bz};
-  mpi_sdrv3d(p,8,nx,ny,nz,XOFF,YOFF,ZOFF,mpi_rank,mpi_numx,mpi_numy,mpi_numz);
+  mpi_sdrv3d(p,8,nx,ny,nz,xoff,yoff,zoff,mpi_rank,mpi_numx,mpi_numy,mpi_numz);
   for (int m=0;m<8;m++){
-    mpi_xbc3d(p[m],nx,ny,nz,XOFF,YOFF,ZOFF,stxs[m],dnxs[m],mpi_rank,mpi_numx,mpi_numy,mpi_numz);
-    mpi_ybc3d(p[m],nx,ny,nz,XOFF,YOFF,ZOFF,stys[m],dnys[m],mpi_rank,mpi_numx,mpi_numy,mpi_numz);
-    mpi_zbc3d(p[m],nx,ny,nz,XOFF,YOFF,ZOFF,stzs[m],dnzs[m],mpi_rank,mpi_numx,mpi_numy,mpi_numz);
+    mpi_xbc3d(p[m],nx,ny,nz,xoff,yoff,zoff,stxs[m],dnxs[m],mpi_rank,mpi_numx,mpi_numy,mpi_numz);
+    mpi_ybc3d(p[m],nx,ny,nz,xoff,yoff,zoff,stys[m],dnys[m],mpi_rank,mpi_numx,mpi_numy,mpi_numz);
+    mpi_zbc3d(p[m],nx,ny,nz,xoff,yoff,zoff,stzs[m],dnzs[m],mpi_rank,mpi_numx,mpi_numy,mpi_numz);
   }
 
 #if (CFLCHECK)
@@ -53,7 +53,7 @@ int main(int argc, char* argv[])
     tim+=dt;
 
     mhd_fd_ct_3d(ro,mx,my,mz,en,bx,by,bz,
-		 dt,dx,dy,dz,nx,ny,nz,XOFF,YOFF,ZOFF,gam,
+		 dt,dx,dy,dz,nx,ny,nz,xoff,yoff,zoff,gam,
 		 mpi_rank,mpi_numx,mpi_numy,mpi_numz);
 
 #if (CFLCHECK)
