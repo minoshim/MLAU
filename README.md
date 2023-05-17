@@ -22,7 +22,7 @@ To read and visualize the data, users can utilize Interactive Data Language (IDL
 The code is tested on Linux OSs (Ubuntu, Linux Mint, CentOS, including Windows Subsystem for Linux).
 
 ## Installation
-1. Download the code from GitHub via `>git clone hppts://github.com/minoshim/MLAU`.
+1. Download the code from GitHub via `>git clone https://github.com/minoshim/MLAU`.
 2. Move to the main directory `MLAU/`.
 3. Check `Makefile.inc` and edit environment variables `CC`, `MPICC`, and `CFLAGS` to meet users environment.
 4. Move to the directory (e.g., `1D/SERIAL/`) containing benchmark tests in the litertures [^1][^2][^3], and see `README` how to run the simulation.
